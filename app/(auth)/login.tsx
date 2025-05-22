@@ -1,11 +1,40 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Mail, Lock, ArrowRight } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      router.replace('/(tabs)');
+    } catch (error) {
+      Alert.alert('Erro no login', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -33,6 +62,8 @@ export default function LoginScreen() {
             placeholderTextColor={Theme.colors.text.medium}
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
           />
         </View>
         
@@ -43,6 +74,8 @@ export default function LoginScreen() {
             placeholder="Senha"
             placeholderTextColor={Theme.colors.text.medium}
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
         </View>
         
@@ -50,12 +83,16 @@ export default function LoginScreen() {
           <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
         </TouchableOpacity>
         
-        <Link href="/(tabs)" asChild>
-          <TouchableOpacity style={styles.loginButton}>
-            <Text style={styles.loginButtonText}>Entrar</Text>
-            <ArrowRight size={20} color="#fff" />
-          </TouchableOpacity>
-        </Link>
+        <TouchableOpacity 
+          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.loginButtonText}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </Text>
+          <ArrowRight size={20} color="#fff" />
+        </TouchableOpacity>
         
         <Text style={styles.orText}>ou entre com</Text>
         
@@ -166,6 +203,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Theme.spacing.lg,
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
   },
   loginButtonText: {
     fontFamily: Theme.typography.fontFamily.subheading,

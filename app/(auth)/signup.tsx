@@ -1,11 +1,65 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Mail, Lock, User, Calendar, ChevronRight } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
 
 export default function SignupScreen() {
+  const [fullName, setFullName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    if (!fullName || !birthDate || !email || !password || !confirmPassword) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Erro', 'As senhas não coincidem');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Sign up with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+
+      // Create profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: authData.user.id,
+            email,
+            full_name: fullName,
+            birth_date: birthDate,
+            denomination: '', // Will be set in the next step
+          },
+        ]);
+
+      if (profileError) throw profileError;
+
+      router.replace('/(tabs)');
+    } catch (error) {
+      Alert.alert('Erro no cadastro', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -33,6 +87,8 @@ export default function SignupScreen() {
               placeholder="Nome completo"
               placeholderTextColor={Theme.colors.text.medium}
               autoCapitalize="words"
+              value={fullName}
+              onChangeText={setFullName}
             />
           </View>
           
@@ -40,9 +96,11 @@ export default function SignupScreen() {
             <Calendar size={20} color={Theme.colors.text.medium} />
             <TextInput
               style={styles.input}
-              placeholder="Data de nascimento"
+              placeholder="Data de nascimento (AAAA-MM-DD)"
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="numeric"
+              value={birthDate}
+              onChangeText={setBirthDate}
             />
           </View>
           
@@ -54,6 +112,8 @@ export default function SignupScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
           
@@ -64,6 +124,8 @@ export default function SignupScreen() {
               placeholder="Senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
+              value={password}
+              onChangeText={setPassword}
             />
           </View>
           
@@ -74,11 +136,19 @@ export default function SignupScreen() {
               placeholder="Confirmar senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
             />
           </View>
           
-          <TouchableOpacity style={styles.signupButton}>
-            <Text style={styles.signupButtonText}>Criar conta</Text>
+          <TouchableOpacity 
+            style={[styles.signupButton, loading && styles.signupButtonDisabled]}
+            onPress={handleSignup}
+            disabled={loading}
+          >
+            <Text style={styles.signupButtonText}>
+              {loading ? 'Criando conta...' : 'Criar conta'}
+            </Text>
             <ChevronRight size={20} color="#fff" />
           </TouchableOpacity>
           
@@ -186,6 +256,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: Theme.spacing.md,
     marginBottom: Theme.spacing.md,
+  },
+  signupButtonDisabled: {
+    opacity: 0.7,
   },
   signupButtonText: {
     fontFamily: Theme.typography.fontFamily.subheading,
