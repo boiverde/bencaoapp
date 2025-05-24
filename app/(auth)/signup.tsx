@@ -1,72 +1,11 @@
-import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { Mail, Lock, User, Calendar, ChevronRight } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
 
 export default function SignupScreen() {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSignup = async () => {
-    if (!fullName || !email || !password || !confirmPassword || !birthDate) {
-      setError('Por favor, preencha todos os campos');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-
-      if (signUpError) throw signUpError;
-
-      if (signUpData?.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: signUpData.user.id,
-              email,
-              full_name: fullName,
-              birth_date: birthDate,
-            },
-          ]);
-
-        if (profileError) throw profileError;
-      }
-
-      router.replace('/(tabs)');
-    } catch (err) {
-      setError('Erro ao criar conta. Por favor, tente novamente.');
-      console.error('Signup error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -87,12 +26,6 @@ export default function SignupScreen() {
           <Text style={styles.cardTitle}>Criar Conta</Text>
           <Text style={styles.cardSubtitle}>Preencha seus dados para começar</Text>
           
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-          
           <View style={styles.inputContainer}>
             <User size={20} color={Theme.colors.text.medium} />
             <TextInput
@@ -100,8 +33,6 @@ export default function SignupScreen() {
               placeholder="Nome completo"
               placeholderTextColor={Theme.colors.text.medium}
               autoCapitalize="words"
-              value={fullName}
-              onChangeText={setFullName}
             />
           </View>
           
@@ -109,11 +40,9 @@ export default function SignupScreen() {
             <Calendar size={20} color={Theme.colors.text.medium} />
             <TextInput
               style={styles.input}
-              placeholder="Data de nascimento (AAAA-MM-DD)"
+              placeholder="Data de nascimento"
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="numeric"
-              value={birthDate}
-              onChangeText={setBirthDate}
             />
           </View>
           
@@ -125,8 +54,6 @@ export default function SignupScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="email-address"
               autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
             />
           </View>
           
@@ -137,8 +64,6 @@ export default function SignupScreen() {
               placeholder="Senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
-              value={password}
-              onChangeText={setPassword}
             />
           </View>
           
@@ -149,19 +74,11 @@ export default function SignupScreen() {
               placeholder="Confirmar senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
             />
           </View>
           
-          <TouchableOpacity 
-            style={[styles.signupButton, loading && styles.signupButtonDisabled]}
-            onPress={handleSignup}
-            disabled={loading}
-          >
-            <Text style={styles.signupButtonText}>
-              {loading ? 'Criando conta...' : 'Criar conta'}
-            </Text>
+          <TouchableOpacity style={styles.signupButton}>
+            <Text style={styles.signupButtonText}>Criar conta</Text>
             <ChevronRight size={20} color="#fff" />
           </TouchableOpacity>
           
@@ -244,18 +161,6 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.medium,
     marginBottom: Theme.spacing.lg,
   },
-  errorContainer: {
-    backgroundColor: '#FDEAEA',
-    padding: Theme.spacing.sm,
-    borderRadius: Theme.borderRadius.md,
-    marginBottom: Theme.spacing.md,
-  },
-  errorText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.status.error,
-    textAlign: 'center',
-  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -281,9 +186,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: Theme.spacing.md,
     marginBottom: Theme.spacing.md,
-  },
-  signupButtonDisabled: {
-    opacity: 0.7,
   },
   signupButtonText: {
     fontFamily: Theme.typography.fontFamily.subheading,
