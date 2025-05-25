@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -12,44 +12,30 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isMounted = useRef(true);
 
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const handleLogin = useCallback(async () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       setError('Por favor, preencha todos os campos');
       return;
     }
 
-    if (!isMounted.current) return;
     setLoading(true);
     setError(null);
 
     try {
-      const { error: signInError } = await signInWithEmail(email, password);
+      const { error } = await signInWithEmail(email, password);
       
-      if (signInError) {
-        if (isMounted.current) {
-          setError('Email ou senha incorretos');
-        }
+      if (error) {
+        setError('Email ou senha incorretos');
       } else {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      if (isMounted.current) {
-        setError('Ocorreu um erro ao fazer login');
-      }
+      setError('Ocorreu um erro ao fazer login');
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [email, password]);
+  };
 
   return (
     <View style={styles.container}>

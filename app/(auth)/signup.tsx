@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -15,15 +15,8 @@ export default function SignupScreen() {
   const [birthDate, setBirthDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isMounted = useRef(true);
 
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const handleSignup = useCallback(async () => {
+  const handleSignup = async () => {
     if (!fullName || !email || !password || !confirmPassword || !birthDate) {
       setError('Por favor, preencha todos os campos');
       return;
@@ -34,30 +27,23 @@ export default function SignupScreen() {
       return;
     }
 
-    if (!isMounted.current) return;
     setLoading(true);
     setError(null);
 
     try {
-      const { error: signUpError } = await signUpWithEmail(email, password);
+      const { error } = await signUpWithEmail(email, password);
       
-      if (signUpError) {
-        if (isMounted.current) {
-          setError(signUpError.message);
-        }
+      if (error) {
+        setError(error.message);
       } else {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      if (isMounted.current) {
-        setError('Ocorreu um erro ao criar sua conta');
-      }
+      setError('Ocorreu um erro ao criar sua conta');
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [fullName, email, password, confirmPassword, birthDate]);
+  };
 
   return (
     <View style={styles.container}>

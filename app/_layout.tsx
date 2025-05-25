@@ -32,7 +32,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      // Hide splash screen after fonts are loaded
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
@@ -45,10 +44,9 @@ export default function RootLayout() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
     </>
