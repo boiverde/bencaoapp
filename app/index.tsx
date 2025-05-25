@@ -37,7 +37,7 @@ export default function SplashScreen() {
       
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <Image 
-          source={require('../assets/images/logo.png')}
+          source={{ uri: 'https://raw.githubusercontent.com/your-username/your-repo/main/assets/logo.png' }}
           style={styles.logo}
         />
         <Text style={styles.title}>Bênção Match</Text>
