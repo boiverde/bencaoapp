@@ -19,6 +19,7 @@ import { SplashScreen } from 'expo-router';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // This hook is critical and must be called before any other initialization
   useFrameworkReady();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -32,11 +33,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
+      // Only hide splash screen after fonts are loaded or if there's an error
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
-  // Return null to keep splash screen visible while fonts load
+  // Keep splash screen visible while fonts load
   if (!fontsLoaded && !fontError) {
     return null;
   }
@@ -44,8 +46,22 @@ export default function RootLayout() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false,
+            // Ensure proper navigation context
+            animation: 'none' 
+          }} 
+        />
+        <Stack.Screen 
+          name="(auth)" 
+          options={{ 
+            headerShown: false,
+            // Ensure proper navigation context
+            animation: 'none' 
+          }} 
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
