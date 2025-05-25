@@ -1,11 +1,45 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Mail, Lock, ArrowRight } from 'lucide-react-native';
+import { login, LoginData } from '@/lib/auth';
+import { z } from 'zod';
 
 export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await login({ email, password });
+      
+      if (error) {
+        if (error instanceof z.ZodError) {
+          setError(error.errors[0].message);
+        } else {
+          setError('Email ou senha incorretos');
+        }
+        return;
+      }
+
+      if (data) {
+        router.replace('/(tabs)');
+      }
+    } catch (err) {
+      setError('Ocorreu um erro ao fazer login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -30,6 +64,12 @@ export default function LoginScreen() {
         <Text style={styles.cardTitle}>Bem-vindo de volta!</Text>
         <Text style={styles.cardSubtitle}>Entre para encontrar sua conexão abençoada</Text>
         
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+        
         <View style={styles.inputContainer}>
           <Mail size={20} color={Theme.colors.text.medium} />
           <TextInput
@@ -38,6 +78,9 @@ export default function LoginScreen() {
             placeholderTextColor={Theme.colors.text.medium}
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            editable={!loading}
           />
         </View>
         
@@ -48,6 +91,9 @@ export default function LoginScreen() {
             placeholder="Senha"
             placeholderTextColor={Theme.colors.text.medium}
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            editable={!loading}
           />
         </View>
         
@@ -55,23 +101,20 @@ export default function LoginScreen() {
           <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
         </TouchableOpacity>
         
-        <Link href="/(tabs)" asChild>
-          <TouchableOpacity style={styles.loginButton}>
-            <Text style={styles.loginButtonText}>Entrar</Text>
-            <ArrowRight size={20} color="#fff" />
-          </TouchableOpacity>
-        </Link>
-        
-        <Text style={styles.orText}>ou entre com</Text>
-        
-        <View style={styles.socialButtonsContainer}>
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialButtonText}>Google</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialButtonText}>Facebook</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity 
+          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <Text style={styles.loginButtonText}>Entrar</Text>
+              <ArrowRight size={20} color="#fff" />
+            </>
+          )}
+        </TouchableOpacity>
         
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Não tem uma conta?</Text>
@@ -145,6 +188,18 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.medium,
     marginBottom: Theme.spacing.lg,
   },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.md,
+    marginBottom: Theme.spacing.md,
+  },
+  errorText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.status.error,
+    textAlign: 'center',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -177,35 +232,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: Theme.spacing.lg,
   },
+  loginButtonDisabled: {
+    opacity: 0.7,
+  },
   loginButtonText: {
     fontFamily: Theme.typography.fontFamily.subheading,
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.background.white,
     marginRight: Theme.spacing.sm,
-  },
-  orText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.md,
-  },
-  socialButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Theme.spacing.lg,
-  },
-  socialButton: {
-    flex: 0.48,
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    paddingVertical: Theme.spacing.sm,
-    alignItems: 'center',
-  },
-  socialButtonText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.dark,
   },
   signupContainer: {
     flexDirection: 'row',
