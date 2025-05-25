@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, View, Text, Image, Animated } from 'react-native';
+import { StyleSheet, View, Text, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import Theme from '@/constants/Theme';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -36,12 +36,11 @@ export default function SplashScreen() {
       />
       
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Image 
-          source={{ uri: 'https://raw.githubusercontent.com/your-username/your-repo/main/assets/logo.png' }}
-          style={styles.logo}
+        <Animated.Image 
+          source={{ uri: 'https://raw.githubusercontent.com/stackblitz/bencao-match/main/logo.png' }}
+          style={[styles.logo, { opacity: fadeAnim }]}
+          resizeMode="contain"
         />
-        <Text style={styles.title}>Bênção Match</Text>
-        <Text style={styles.subtitle}>Conexões abençoadas</Text>
       </Animated.View>
     </View>
   );
@@ -64,24 +63,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 150,
-    height: 150,
-    marginBottom: Theme.spacing.md,
-  },
-  title: {
-    fontFamily: Theme.typography.fontFamily.heading,
-    fontSize: Theme.typography.fontSize.xxxl,
-    color: Theme.colors.background.white,
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  subtitle: {
-    fontFamily: Theme.typography.fontFamily.verse,
-    fontSize: Theme.typography.fontSize.lg,
-    color: Theme.colors.background.white,
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    width: 200,
+    height: 200,
   },
 });
