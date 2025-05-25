@@ -1,52 +1,115 @@
-import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Search, Filter, Heart, MessageSquare, Church } from 'lucide-react-native';
-import { TextInput } from 'react-native-gesture-handler';
+import { Search, Filter, Heart, MessageSquare, Image as ImageIcon, Camera, MoreVertical } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 
 // Mock data
-const FOLLOWING = [
+const POSTS = [
   {
     id: '1',
-    name: 'Mariana',
-    age: 28,
-    denomination: 'Batista',
-    distance: '5km',
-    image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    isOnline: true,
-    lastActive: 'Agora',
-    mutualConnections: 12,
+    user: {
+      id: '1',
+      name: 'Mariana',
+      image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    },
+    image: 'https://images.pexels.com/photos/267559/pexels-photo-267559.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    caption: 'Momento especial de louvor na igreja hoje! 🙏✨',
+    likes: 45,
+    comments: 12,
+    timestamp: '2h atrás',
   },
   {
     id: '2',
-    name: 'João',
-    age: 30,
-    denomination: 'Católico',
-    distance: '8km',
-    image: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    isOnline: false,
-    lastActive: '2h atrás',
-    mutualConnections: 8,
+    user: {
+      id: '2',
+      name: 'João',
+      image: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    },
+    image: 'https://images.pexels.com/photos/236339/pexels-photo-236339.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    caption: 'Retiro de jovens 2025! Que Deus continue abençoando nossa juventude. 🙌',
+    likes: 38,
+    comments: 8,
+    timestamp: '5h atrás',
   },
   {
     id: '3',
-    name: 'Gabriela',
-    age: 26,
-    denomination: 'Presbiteriana',
-    distance: '3km',
-    image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    isOnline: true,
-    lastActive: 'Agora',
-    mutualConnections: 15,
+    user: {
+      id: '3',
+      name: 'Gabriela',
+      image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    },
+    image: 'https://images.pexels.com/photos/935944/pexels-photo-935944.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    caption: 'Gratidão pelo encontro de casais hoje. Que benção compartilhar experiências! ❤️',
+    likes: 72,
+    comments: 15,
+    timestamp: '1d atrás',
   },
 ];
 
 export default function CommunityScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleNewPost = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      // Here you would handle the new post creation
+      console.log('New post image:', result.assets[0].uri);
+    }
+  };
+
+  const renderPost = ({ item }) => (
+    <View style={styles.postCard}>
+      <View style={styles.postHeader}>
+        <View style={styles.userInfo}>
+          <Image source={{ uri: item.user.image }} style={styles.userAvatar} />
+          <Text style={styles.userName}>{item.user.name}</Text>
+        </View>
+        <TouchableOpacity>
+          <MoreVertical size={20} color={Theme.colors.text.medium} />
+        </TouchableOpacity>
+      </View>
+
+      <Image source={{ uri: item.image }} style={styles.postImage} />
+
+      <View style={styles.postActions}>
+        <View style={styles.leftActions}>
+          <TouchableOpacity style={styles.actionButton}>
+            <Heart size={24} color={Theme.colors.text.dark} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+            <MessageSquare size={24} color={Theme.colors.text.dark} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.postInfo}>
+        <Text style={styles.likesCount}>{item.likes} curtidas</Text>
+        <View style={styles.captionContainer}>
+          <Text style={styles.captionName}>{item.user.name}</Text>
+          <Text style={styles.caption}>{item.caption}</Text>
+        </View>
+        <TouchableOpacity>
+          <Text style={styles.commentsCount}>
+            Ver {item.comments} comentários
+          </Text>
+        </TouchableOpacity>
+        <Text style={styles.timestamp}>{item.timestamp}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Comunidade Abençoada</Text>
-        <Text style={styles.subtitle}>Pessoas que você segue</Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -54,8 +117,10 @@ export default function CommunityScreen() {
           <Search size={20} color={Theme.colors.text.medium} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar na comunidade..."
+            placeholder="Buscar publicações..."
             placeholderTextColor={Theme.colors.text.medium}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
         </View>
         <TouchableOpacity style={styles.filterButton}>
@@ -64,46 +129,15 @@ export default function CommunityScreen() {
       </View>
 
       <FlatList
-        data={FOLLOWING}
+        data={POSTS}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.userInfo}>
-                <View style={styles.avatarContainer}>
-                  <Image source={{ uri: item.image }} style={styles.avatar} />
-                  {item.isOnline && <View style={styles.onlineIndicator} />}
-                </View>
-                <View>
-                  <Text style={styles.name}>{item.name}, {item.age}</Text>
-                  <View style={styles.denominationContainer}>
-                    <Church size={14} color={Theme.colors.primary.lilac} />
-                    <Text style={styles.denomination}>{item.denomination}</Text>
-                  </View>
-                </View>
-              </View>
-              <Text style={styles.distance}>{item.distance}</Text>
-            </View>
-
-            <View style={styles.cardFooter}>
-              <View style={styles.mutualConnections}>
-                <Text style={styles.mutualText}>
-                  {item.mutualConnections} conexões em comum
-                </Text>
-              </View>
-              <View style={styles.actions}>
-                <TouchableOpacity style={styles.actionButton}>
-                  <MessageSquare size={20} color={Theme.colors.primary.blue} />
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionButton, styles.likeButton]}>
-                  <Heart size={20} color="#fff" fill="#fff" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
-        contentContainerStyle={styles.list}
+        renderItem={renderPost}
+        contentContainerStyle={styles.postsList}
       />
+
+      <TouchableOpacity style={styles.newPostButton} onPress={handleNewPost}>
+        <Camera size={24} color="#fff" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -122,12 +156,6 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xxl,
     color: Theme.colors.primary.blue,
-    marginBottom: Theme.spacing.xs,
-  },
-  subtitle: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.medium,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -162,100 +190,100 @@ const styles = StyleSheet.create({
     height: 48,
     ...Theme.shadows.small,
   },
-  list: {
+  postsList: {
     padding: Theme.spacing.md,
   },
-  card: {
+  postCard: {
     backgroundColor: Theme.colors.background.white,
     borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.md,
     marginBottom: Theme.spacing.md,
+    overflow: 'hidden',
     ...Theme.shadows.small,
   },
-  cardHeader: {
+  postHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Theme.spacing.md,
+    justifyContent: 'space-between',
+    padding: Theme.spacing.md,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  avatarContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: Theme.borderRadius.circle,
-    marginRight: Theme.spacing.md,
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: Theme.borderRadius.circle,
-  },
-  onlineIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.status.success,
-    borderWidth: 2,
-    borderColor: Theme.colors.background.white,
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-  },
-  name: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.lg,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.xs,
-  },
-  denominationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  denomination: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.primary.lilac,
-    marginLeft: Theme.spacing.xs,
-  },
-  distance: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.ui.border,
-  },
-  mutualConnections: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  mutualText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionButton: {
+  userAvatar: {
     width: 40,
     height: 40,
     borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.background.light,
+    marginRight: Theme.spacing.sm,
+  },
+  userName: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+  },
+  postImage: {
+    width: '100%',
+    height: 300,
+  },
+  postActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: Theme.spacing.md,
+  },
+  leftActions: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    marginRight: Theme.spacing.md,
+  },
+  postInfo: {
+    paddingHorizontal: Theme.spacing.md,
+    paddingBottom: Theme.spacing.md,
+  },
+  likesCount: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+    marginBottom: Theme.spacing.xs,
+  },
+  captionContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: Theme.spacing.xs,
+  },
+  captionName: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+    marginRight: Theme.spacing.xs,
+  },
+  caption: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+    flex: 1,
+  },
+  commentsCount: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.medium,
+    marginBottom: Theme.spacing.xs,
+  },
+  timestamp: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.medium,
+  },
+  newPostButton: {
+    position: 'absolute',
+    right: Theme.spacing.md,
+    bottom: Theme.spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: Theme.borderRadius.circle,
+    backgroundColor: Theme.colors.primary.blue,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: Theme.spacing.sm,
-  },
-  likeButton: {
-    backgroundColor: Theme.colors.primary.pink,
+    ...Theme.shadows.medium,
   },
 });
