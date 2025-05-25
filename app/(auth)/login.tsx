@@ -17,11 +17,6 @@ export default function LoginScreen() {
       />
       
       <View style={styles.logoContainer}>
-        <Image 
-          source={require('../../assets/images/icon.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
         <Text style={styles.logoText}>Bênção Match</Text>
         <Text style={styles.logoSubtext}>Conexões abençoadas</Text>
       </View>
@@ -104,11 +99,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: Theme.spacing.xl,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    marginBottom: Theme.spacing.sm,
   },
   logoText: {
     fontFamily: Theme.typography.fontFamily.heading,
