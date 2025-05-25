@@ -26,6 +26,7 @@ export default function LoginScreen() {
       return;
     }
 
+    if (!isMounted.current) return;
     setLoading(true);
     setError(null);
 
@@ -37,9 +38,7 @@ export default function LoginScreen() {
           setError('Email ou senha incorretos');
         }
       } else {
-        if (isMounted.current) {
-          router.replace('/(tabs)');
-        }
+        router.replace('/(tabs)');
       }
     } catch (err) {
       if (isMounted.current) {
@@ -52,55 +51,39 @@ export default function LoginScreen() {
     }
   }, [email, password]);
 
-  const handleGoogleLogin = useCallback(async () => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
     try {
       const { error } = await signInWithGoogle();
       if (error) {
-        if (isMounted.current) {
-          setError('Erro ao fazer login com Google');
-        }
+        setError('Erro ao fazer login com Google');
       } else {
-        if (isMounted.current) {
-          router.replace('/(tabs)');
-        }
+        router.replace('/(tabs)');
       }
     } catch (err) {
-      if (isMounted.current) {
-        setError('Ocorreu um erro ao fazer login com Google');
-      }
+      setError('Ocorreu um erro ao fazer login com Google');
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, []);
+  };
 
-  const handleFacebookLogin = useCallback(async () => {
+  const handleFacebookLogin = async () => {
     setLoading(true);
     setError(null);
     try {
       const { error } = await signInWithFacebook();
       if (error) {
-        if (isMounted.current) {
-          setError('Erro ao fazer login com Facebook');
-        }
+        setError('Erro ao fazer login com Facebook');
       } else {
-        if (isMounted.current) {
-          router.replace('/(tabs)');
-        }
+        router.replace('/(tabs)');
       }
     } catch (err) {
-      if (isMounted.current) {
-        setError('Ocorreu um erro ao fazer login com Facebook');
-      }
+      setError('Ocorreu um erro ao fazer login com Facebook');
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, []);
+  };
 
   return (
     <View style={styles.container}>
