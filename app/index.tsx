@@ -36,13 +36,10 @@ export default function SplashScreen() {
       />
       
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <View style={styles.logoContainer}>
-          <Image 
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+        <Image 
+          source={{ uri: 'https://raw.githubusercontent.com/your-username/your-repo/main/assets/logo.png' }}
+          style={styles.logo}
+        />
         <Text style={styles.title}>Bênção Match</Text>
         <Text style={styles.subtitle}>Conexões abençoadas</Text>
       </Animated.View>
@@ -66,16 +63,10 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
   },
-  logoContainer: {
+  logo: {
     width: 150,
     height: 150,
     marginBottom: Theme.spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logo: {
-    width: '100%',
-    height: '100%',
   },
   title: {
     fontFamily: Theme.typography.fontFamily.heading,
