@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link, router } from 'expo-router';
 import { Mail, Lock, ArrowRight } from 'lucide-react-native';
-import { signInWithEmail } from '@/lib/supabase';
+import { signInWithEmail, signInWithGoogle, signInWithFacebook } from '@/lib/supabase';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -13,51 +13,77 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
-  const abortController = useRef<AbortController | null>(null);
 
   useEffect(() => {
     return () => {
       isMounted.current = false;
-      if (abortController.current) {
-        abortController.current.abort();
-      }
     };
-  }, []);
-
-  const safeSetState = useCallback(<T extends unknown>(
-    setter: React.Dispatch<React.SetStateAction<T>>,
-    value: T
-  ) => {
-    if (isMounted.current) {
-      setter(value);
-    }
   }, []);
 
   const handleLogin = useCallback(async () => {
     if (!email || !password) {
-      safeSetState(setError, 'Por favor, preencha todos os campos');
+      setError('Por favor, preencha todos os campos');
       return;
     }
 
-    abortController.current = new AbortController();
-    
-    safeSetState(setLoading, true);
-    safeSetState(setError, null);
+    if (!isMounted.current) return;
+    setLoading(true);
+    setError(null);
 
     try {
       const { error: signInError } = await signInWithEmail(email, password);
       
       if (signInError) {
-        safeSetState(setError, 'Email ou senha incorretos');
-      } else if (isMounted.current) {
+        if (isMounted.current) {
+          setError('Email ou senha incorretos');
+        }
+      } else {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      safeSetState(setError, 'Ocorreu um erro ao fazer login');
+      if (isMounted.current) {
+        setError('Ocorreu um erro ao fazer login');
+      }
     } finally {
-      safeSetState(setLoading, false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
-  }, [email, password, safeSetState]);
+  }, [email, password]);
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        setError('Erro ao fazer login com Google');
+      } else {
+        router.replace('/(tabs)');
+      }
+    } catch (err) {
+      setError('Ocorreu um erro ao fazer login com Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await signInWithFacebook();
+      if (error) {
+        setError('Erro ao fazer login com Facebook');
+      } else {
+        router.replace('/(tabs)');
+      }
+    } catch (err) {
+      setError('Ocorreu um erro ao fazer login com Facebook');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -135,6 +161,33 @@ export default function LoginScreen() {
             </>
           )}
         </TouchableOpacity>
+        
+        <Text style={styles.orText}>ou entre com</Text>
+        
+        <View style={styles.socialButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.socialButton}
+            onPress={handleGoogleLogin}
+            disabled={loading}
+          >
+            <Image 
+              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }}
+              style={styles.socialIcon}
+            />
+            <Text style={styles.socialButtonText}>Google</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.socialButton}
+            onPress={handleFacebookLogin}
+            disabled={loading}
+          >
+            <Image 
+              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg' }}
+              style={styles.socialIcon}
+            />
+            <Text style={styles.socialButtonText}>Facebook</Text>
+          </TouchableOpacity>
+        </View>
         
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Não tem uma conta?</Text>
@@ -260,6 +313,37 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.background.white,
     marginRight: Theme.spacing.sm,
+  },
+  orText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.medium,
+    textAlign: 'center',
+    marginBottom: Theme.spacing.md,
+  },
+  socialButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Theme.spacing.lg,
+  },
+  socialButton: {
+    flex: 0.48,
+    flexDirection: 'row',
+    backgroundColor: Theme.colors.background.light,
+    borderRadius: Theme.borderRadius.md,
+    paddingVertical: Theme.spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialIcon: {
+    width: 20,
+    height: 20,
+    marginRight: Theme.spacing.xs,
+  },
+  socialButtonText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.dark,
   },
   signupContainer: {
     flexDirection: 'row',
