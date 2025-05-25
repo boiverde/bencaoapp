@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link, router } from 'expo-router';
 import { Mail, Lock, ArrowRight } from 'lucide-react-native';
-import { signInWithEmail, signInWithGoogle, signInWithFacebook } from '@/lib/supabase';
+import { signInWithEmail } from '@/lib/supabase';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -18,7 +18,6 @@ export default function LoginScreen() {
   useEffect(() => {
     return () => {
       isMounted.current = false;
-      // Cancel any pending requests
       if (abortController.current) {
         abortController.current.abort();
       }
@@ -40,7 +39,6 @@ export default function LoginScreen() {
       return;
     }
 
-    // Create new AbortController for this request
     abortController.current = new AbortController();
     
     safeSetState(setLoading, true);
@@ -60,46 +58,6 @@ export default function LoginScreen() {
       safeSetState(setLoading, false);
     }
   }, [email, password, safeSetState]);
-
-  const handleGoogleLogin = useCallback(async () => {
-    abortController.current = new AbortController();
-    
-    safeSetState(setLoading, true);
-    safeSetState(setError, null);
-
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) {
-        safeSetState(setError, 'Erro ao fazer login com Google');
-      } else if (isMounted.current) {
-        router.replace('/(tabs)');
-      }
-    } catch (err) {
-      safeSetState(setError, 'Ocorreu um erro ao fazer login com Google');
-    } finally {
-      safeSetState(setLoading, false);
-    }
-  }, [safeSetState]);
-
-  const handleFacebookLogin = useCallback(async () => {
-    abortController.current = new AbortController();
-    
-    safeSetState(setLoading, true);
-    safeSetState(setError, null);
-
-    try {
-      const { error } = await signInWithFacebook();
-      if (error) {
-        safeSetState(setError, 'Erro ao fazer login com Facebook');
-      } else if (isMounted.current) {
-        router.replace('/(tabs)');
-      }
-    } catch (err) {
-      safeSetState(setError, 'Ocorreu um erro ao fazer login com Facebook');
-    } finally {
-      safeSetState(setLoading, false);
-    }
-  }, [safeSetState]);
 
   return (
     <View style={styles.container}>
@@ -177,33 +135,6 @@ export default function LoginScreen() {
             </>
           )}
         </TouchableOpacity>
-        
-        <Text style={styles.orText}>ou entre com</Text>
-        
-        <View style={styles.socialButtonsContainer}>
-          <TouchableOpacity 
-            style={styles.socialButton}
-            onPress={handleGoogleLogin}
-            disabled={loading}
-          >
-            <Image 
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }}
-              style={styles.socialIcon}
-            />
-            <Text style={styles.socialButtonText}>Google</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.socialButton}
-            onPress={handleFacebookLogin}
-            disabled={loading}
-          >
-            <Image 
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg' }}
-              style={styles.socialIcon}
-            />
-            <Text style={styles.socialButtonText}>Facebook</Text>
-          </TouchableOpacity>
-        </View>
         
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Não tem uma conta?</Text>
@@ -329,37 +260,6 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.background.white,
     marginRight: Theme.spacing.sm,
-  },
-  orText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.md,
-  },
-  socialButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Theme.spacing.lg,
-  },
-  socialButton: {
-    flex: 0.48,
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    paddingVertical: Theme.spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  socialIcon: {
-    width: 20,
-    height: 20,
-    marginRight: Theme.spacing.xs,
-  },
-  socialButtonText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.dark,
   },
   signupContainer: {
     flexDirection: 'row',
