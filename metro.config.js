@@ -10,10 +10,4 @@ config.resolver.nodeModulesPaths = [__dirname];
 config.resolver.sourceExts = ['js', 'jsx', 'ts', 'tsx', 'json'];
 config.resolver.assetExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'ttf'];
 
-// Configure TypeScript transformer
-config.transformer = {
-  ...config.transformer,
-  babelTransformerPath: require.resolve('react-native-typescript-transformer')
-};
-
 module.exports = config;
