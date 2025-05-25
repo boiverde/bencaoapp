@@ -15,6 +15,10 @@ export default function LoginScreen() {
   const isMounted = useRef(true);
 
   useEffect(() => {
+    // Set mounted flag
+    isMounted.current = true;
+    
+    // Cleanup function to handle unmounting
     return () => {
       isMounted.current = false;
     };
@@ -26,6 +30,8 @@ export default function LoginScreen() {
       return;
     }
 
+    if (!isMounted.current) return;
+    
     setLoading(true);
     setError(null);
 
@@ -53,6 +59,8 @@ export default function LoginScreen() {
   }, [email, password]);
 
   const handleGoogleLogin = useCallback(async () => {
+    if (!isMounted.current) return;
+
     setLoading(true);
     setError(null);
 
@@ -79,6 +87,8 @@ export default function LoginScreen() {
   }, []);
 
   const handleFacebookLogin = useCallback(async () => {
+    if (!isMounted.current) return;
+
     setLoading(true);
     setError(null);
 
