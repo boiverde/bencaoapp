@@ -20,70 +20,77 @@ export default function LoginScreen() {
     };
   }, []);
 
+  const safeSetState = useCallback((setter: Function) => {
+    if (isMounted.current) {
+      setter();
+    }
+  }, []);
+
   const handleLogin = useCallback(async () => {
     if (!email || !password) {
-      setError('Por favor, preencha todos os campos');
+      safeSetState(() => setError('Por favor, preencha todos os campos'));
       return;
     }
 
-    if (!isMounted.current) return;
-    setLoading(true);
-    setError(null);
+    safeSetState(() => {
+      setLoading(true);
+      setError(null);
+    });
 
     try {
       const { error: signInError } = await signInWithEmail(email, password);
       
       if (signInError) {
-        if (isMounted.current) {
-          setError('Email ou senha incorretos');
-        }
-      } else {
+        safeSetState(() => setError('Email ou senha incorretos'));
+      } else if (isMounted.current) {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      if (isMounted.current) {
-        setError('Ocorreu um erro ao fazer login');
-      }
+      safeSetState(() => setError('Ocorreu um erro ao fazer login'));
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      safeSetState(() => setLoading(false));
     }
-  }, [email, password]);
+  }, [email, password, safeSetState]);
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError(null);
+  const handleGoogleLogin = useCallback(async () => {
+    safeSetState(() => {
+      setLoading(true);
+      setError(null);
+    });
+
     try {
       const { error } = await signInWithGoogle();
       if (error) {
-        setError('Erro ao fazer login com Google');
-      } else {
+        safeSetState(() => setError('Erro ao fazer login com Google'));
+      } else if (isMounted.current) {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      setError('Ocorreu um erro ao fazer login com Google');
+      safeSetState(() => setError('Ocorreu um erro ao fazer login com Google'));
     } finally {
-      setLoading(false);
+      safeSetState(() => setLoading(false));
     }
-  };
+  }, [safeSetState]);
 
-  const handleFacebookLogin = async () => {
-    setLoading(true);
-    setError(null);
+  const handleFacebookLogin = useCallback(async () => {
+    safeSetState(() => {
+      setLoading(true);
+      setError(null);
+    });
+
     try {
       const { error } = await signInWithFacebook();
       if (error) {
-        setError('Erro ao fazer login com Facebook');
-      } else {
+        safeSetState(() => setError('Erro ao fazer login com Facebook'));
+      } else if (isMounted.current) {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      setError('Ocorreu um erro ao fazer login com Facebook');
+      safeSetState(() => setError('Ocorreu um erro ao fazer login com Facebook'));
     } finally {
-      setLoading(false);
+      safeSetState(() => setLoading(false));
     }
-  };
+  }, [safeSetState]);
 
   return (
     <View style={styles.container}>
