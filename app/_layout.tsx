@@ -14,14 +14,14 @@ import {
 } from '@expo-google-fonts/open-sans';
 import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
 import { SplashScreen } from 'expo-router';
-import { useAuth } from '@/hooks/useAuth';
+import { getCurrentSession } from '@/lib/supabase';
+import { router } from 'expo-router';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useFrameworkReady();
-  const { loading: authLoading } = useAuth();
 
   const [fontsLoaded, fontError] = useFonts({
     'Montserrat-Regular': Montserrat_400Regular,
@@ -33,23 +33,30 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if ((fontsLoaded || fontError) && !authLoading) {
-      // Hide splash screen after fonts are loaded and auth is checked
+    async function checkSession() {
+      const { data: { session } } = await getCurrentSession();
+      if (session) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/(auth)/login');
+      }
+    }
+
+    if (fontsLoaded || fontError) {
+      checkSession();
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError, authLoading]);
+  }, [fontsLoaded, fontError]);
 
-  // Return null to keep splash screen visible while loading
-  if (!fontsLoaded && !fontError && authLoading) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
