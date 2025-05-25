@@ -26,16 +26,20 @@ export default function LoginScreen() {
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
+    try {
       const { error: signInError } = await signInWithEmail(email, password);
       
-      if (signInError && isMounted.current) {
-        setError('Email ou senha incorretos');
-      } else if (isMounted.current) {
-        router.replace('/(tabs)');
+      if (signInError) {
+        if (isMounted.current) {
+          setError('Email ou senha incorretos');
+        }
+      } else {
+        if (isMounted.current) {
+          router.replace('/(tabs)');
+        }
       }
     } catch (err) {
       if (isMounted.current) {
@@ -49,15 +53,19 @@ export default function LoginScreen() {
   }, [email, password]);
 
   const handleGoogleLogin = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
+    try {
       const { error } = await signInWithGoogle();
-      if (error && isMounted.current) {
-        setError('Erro ao fazer login com Google');
-      } else if (isMounted.current) {
-        router.replace('/(tabs)');
+      if (error) {
+        if (isMounted.current) {
+          setError('Erro ao fazer login com Google');
+        }
+      } else {
+        if (isMounted.current) {
+          router.replace('/(tabs)');
+        }
       }
     } catch (err) {
       if (isMounted.current) {
@@ -71,15 +79,19 @@ export default function LoginScreen() {
   }, []);
 
   const handleFacebookLogin = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
+    try {
       const { error } = await signInWithFacebook();
-      if (error && isMounted.current) {
-        setError('Erro ao fazer login com Facebook');
-      } else if (isMounted.current) {
-        router.replace('/(tabs)');
+      if (error) {
+        if (isMounted.current) {
+          setError('Erro ao fazer login com Facebook');
+        }
+      } else {
+        if (isMounted.current) {
+          router.replace('/(tabs)');
+        }
       }
     } catch (err) {
       if (isMounted.current) {
