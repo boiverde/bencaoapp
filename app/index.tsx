@@ -37,8 +37,9 @@ export default function SplashScreen() {
       
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <Image 
-          source={require('@/assets/images/logo.png')}
+          source={require('../assets/images/logo.png')}
           style={styles.logo}
+          resizeMode="contain"
         />
         <Text style={styles.title}>Bênção Match</Text>
         <Text style={styles.subtitle}>Conexões abençoadas</Text>
