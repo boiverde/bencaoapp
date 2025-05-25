@@ -6,7 +6,7 @@ import Theme from '@/constants/Theme';
 import { Link, router } from 'expo-router';
 import { Mail, Lock, User, Calendar, ChevronRight, Church } from 'lucide-react-native';
 import { signup, SignupData } from '@/lib/auth';
-import DateTimePicker from '@expo/datetime-picker-android';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
