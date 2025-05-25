@@ -1,11 +1,77 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight } from 'lucide-react-native';
+import { Link, router } from 'expo-router';
+import { Mail, Lock, User, Calendar, ChevronRight, Church } from 'lucide-react-native';
+import { signup, SignupData } from '@/lib/auth';
+import DateTimePicker from '@expo/datetime-picker-android';
 
 export default function SignupScreen() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  const [formData, setFormData] = useState<SignupData>({
+    email: '',
+    password: '',
+    fullName: '',
+    birthDate: '',
+    denomination: '',
+  });
+  
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+      setFormData(prev => ({ ...prev, birthDate: formattedDate }));
+    }
+  };
+  
+  const handleSignup = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      // Basic validation
+      if (!formData.email || !formData.password || !formData.fullName || !formData.birthDate || !formData.denomination) {
+        throw new Error('Por favor, preencha todos os campos');
+      }
+      
+      if (formData.password !== confirmPassword) {
+        throw new Error('As senhas não coincidem');
+      }
+      
+      // Calculate age
+      const birthDate = new Date(formData.birthDate);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (age < 18) {
+        throw new Error('Você precisa ter pelo menos 18 anos para se cadastrar');
+      }
+      
+      const { error: signupError } = await signup(formData);
+      
+      if (signupError) {
+        throw signupError;
+      }
+      
+      router.replace('/login');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -26,6 +92,12 @@ export default function SignupScreen() {
           <Text style={styles.cardTitle}>Criar Conta</Text>
           <Text style={styles.cardSubtitle}>Preencha seus dados para começar</Text>
           
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+          
           <View style={styles.inputContainer}>
             <User size={20} color={Theme.colors.text.medium} />
             <TextInput
@@ -33,16 +105,43 @@ export default function SignupScreen() {
               placeholder="Nome completo"
               placeholderTextColor={Theme.colors.text.medium}
               autoCapitalize="words"
+              value={formData.fullName}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, fullName: text }))}
             />
           </View>
           
-          <View style={styles.inputContainer}>
+          <TouchableOpacity
+            style={styles.inputContainer}
+            onPress={() => setShowDatePicker(true)}
+          >
             <Calendar size={20} color={Theme.colors.text.medium} />
+            <Text
+              style={[
+                styles.input,
+                !formData.birthDate && { color: Theme.colors.text.medium }
+              ]}
+            >
+              {formData.birthDate ? new Date(formData.birthDate).toLocaleDateString() : 'Data de nascimento'}
+            </Text>
+          </TouchableOpacity>
+          
+          {showDatePicker && (
+            <DateTimePicker
+              value={formData.birthDate ? new Date(formData.birthDate) : new Date()}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleDateChange}
+            />
+          )}
+          
+          <View style={styles.inputContainer}>
+            <Church size={20} color={Theme.colors.text.medium} />
             <TextInput
               style={styles.input}
-              placeholder="Data de nascimento"
+              placeholder="Denominação"
               placeholderTextColor={Theme.colors.text.medium}
-              keyboardType="numeric"
+              value={formData.denomination}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, denomination: text }))}
             />
           </View>
           
@@ -54,6 +153,8 @@ export default function SignupScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="email-address"
               autoCapitalize="none"
+              value={formData.email}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
             />
           </View>
           
@@ -64,6 +165,8 @@ export default function SignupScreen() {
               placeholder="Senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
+              value={formData.password}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
             />
           </View>
           
@@ -74,12 +177,24 @@ export default function SignupScreen() {
               placeholder="Confirmar senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
             />
           </View>
           
-          <TouchableOpacity style={styles.signupButton}>
-            <Text style={styles.signupButtonText}>Criar conta</Text>
-            <ChevronRight size={20} color="#fff" />
+          <TouchableOpacity 
+            style={[styles.signupButton, loading && styles.signupButtonDisabled]}
+            onPress={handleSignup}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.signupButtonText}>Criar conta</Text>
+                <ChevronRight size={20} color="#fff" />
+              </>
+            )}
           </TouchableOpacity>
           
           <View style={styles.termsContainer}>
@@ -161,6 +276,18 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.medium,
     marginBottom: Theme.spacing.lg,
   },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.md,
+    marginBottom: Theme.spacing.md,
+  },
+  errorText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.status.error,
+    textAlign: 'center',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,6 +313,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: Theme.spacing.md,
     marginBottom: Theme.spacing.md,
+  },
+  signupButtonDisabled: {
+    opacity: 0.7,
   },
   signupButtonText: {
     fontFamily: Theme.typography.fontFamily.subheading,
