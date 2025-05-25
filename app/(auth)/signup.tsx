@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin } from 'lucide-react-native';
+import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music } from 'lucide-react-native';
 import DenominationModal from '@/components/UI/DenominationModal';
 import LocationModal from '@/components/UI/LocationModal';
 import PhotoUpload from '@/components/UI/PhotoUpload';
@@ -17,6 +17,7 @@ export default function SignupScreen() {
   const [selectedLocation, setSelectedLocation] = useState<{ state?: string; city?: string }>({});
   const [photo, setPhoto] = useState<string>();
   const [aboutMe, setAboutMe] = useState('');
+  const [favoriteWorship, setFavoriteWorship] = useState('');
 
   const handleSelectPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -34,6 +35,12 @@ export default function SignupScreen() {
   const handleAboutMeChange = (text: string) => {
     if (text.length <= 500) {
       setAboutMe(text);
+    }
+  };
+
+  const handleFavoriteWorshipChange = (text: string) => {
+    if (text.length <= 30) {
+      setFavoriteWorship(text);
     }
   };
 
@@ -157,6 +164,23 @@ export default function SignupScreen() {
             />
             <Text style={styles.characterCount}>
               {aboutMe.length}/500 caracteres
+            </Text>
+          </View>
+
+          <View style={styles.favoriteWorshipContainer}>
+            <Text style={styles.favoriteWorshipTitle}>Louvor favorito</Text>
+            <View style={styles.favoriteWorshipInputContainer}>
+              <Music size={20} color={Theme.colors.text.medium} />
+              <TextInput
+                style={styles.favoriteWorshipInput}
+                placeholder="Ex: Deus é Deus - Delino Marçal"
+                placeholderTextColor={Theme.colors.text.medium}
+                value={favoriteWorship}
+                onChangeText={handleFavoriteWorshipChange}
+              />
+            </View>
+            <Text style={styles.characterCount}>
+              {favoriteWorship.length}/30 caracteres
             </Text>
           </View>
           
@@ -307,6 +331,30 @@ const styles = StyleSheet.create({
     height: 120,
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+  },
+  favoriteWorshipContainer: {
+    marginBottom: Theme.spacing.md,
+  },
+  favoriteWorshipTitle: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+    marginBottom: Theme.spacing.sm,
+  },
+  favoriteWorshipInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.background.light,
+    borderRadius: Theme.borderRadius.md,
+    paddingHorizontal: Theme.spacing.md,
+  },
+  favoriteWorshipInput: {
+    flex: 1,
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    paddingVertical: Theme.spacing.md,
+    marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
   },
   characterCount: {
