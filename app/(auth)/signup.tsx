@@ -4,14 +4,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church } from 'lucide-react-native';
+import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin } from 'lucide-react-native';
 import DenominationModal from '@/components/UI/DenominationModal';
+import LocationModal from '@/components/UI/LocationModal';
 import PhotoUpload from '@/components/UI/PhotoUpload';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function SignupScreen() {
   const [denominationModalVisible, setDenominationModalVisible] = useState(false);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [selectedDenomination, setSelectedDenomination] = useState<string>();
+  const [selectedLocation, setSelectedLocation] = useState<{ state?: string; city?: string }>({});
   const [photo, setPhoto] = useState<string>();
 
   const handleSelectPhoto = async () => {
@@ -74,12 +77,30 @@ export default function SignupScreen() {
             onPress={() => setDenominationModalVisible(true)}
           >
             <Church size={20} color={Theme.colors.text.medium} />
-            <View style={styles.denominationSelect}>
+            <View style={styles.selectContainer}>
               <Text style={[
-                styles.denominationSelectText,
-                selectedDenomination && styles.denominationSelectedText
+                styles.selectText,
+                selectedDenomination && styles.selectedText
               ]}>
                 {selectedDenomination || 'Selecione sua denominação'}
+              </Text>
+              <ChevronRight size={20} color={Theme.colors.text.medium} />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.inputContainer}
+            onPress={() => setLocationModalVisible(true)}
+          >
+            <MapPin size={20} color={Theme.colors.text.medium} />
+            <View style={styles.selectContainer}>
+              <Text style={[
+                styles.selectText,
+                (selectedLocation.state || selectedLocation.city) && styles.selectedText
+              ]}>
+                {selectedLocation.state && selectedLocation.city
+                  ? `${selectedLocation.city}, ${selectedLocation.state}`
+                  : 'Selecione sua localização'}
               </Text>
               <ChevronRight size={20} color={Theme.colors.text.medium} />
             </View>
@@ -147,6 +168,14 @@ export default function SignupScreen() {
         onClose={() => setDenominationModalVisible(false)}
         onSelect={setSelectedDenomination}
         selectedDenomination={selectedDenomination}
+      />
+
+      <LocationModal
+        visible={locationModalVisible}
+        onClose={() => setLocationModalVisible(false)}
+        onSelect={setSelectedLocation}
+        selectedState={selectedLocation.state}
+        selectedCity={selectedLocation.city}
       />
     </View>
   );
@@ -223,7 +252,7 @@ const styles = StyleSheet.create({
     marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
   },
-  denominationSelect: {
+  selectContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -231,12 +260,12 @@ const styles = StyleSheet.create({
     paddingVertical: Theme.spacing.md,
     marginLeft: Theme.spacing.sm,
   },
-  denominationSelectText: {
+  selectText: {
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.text.medium,
   },
-  denominationSelectedText: {
+  selectedText: {
     color: Theme.colors.text.dark,
   },
   signupButton: {
