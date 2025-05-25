@@ -15,7 +15,12 @@ export default function SplashScreen() {
         duration: 1000,
         useNativeDriver: true,
       }),
-      Animated.delay(2000), // Total time will be 3 seconds (1s fade in + 2s delay)
+      Animated.delay(1500),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
     ]).start(() => {
       router.replace('/(auth)/login');
     });
@@ -32,10 +37,11 @@ export default function SplashScreen() {
       
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <Image 
-          source={require('../../assets/images/logo.png')}
+          source={{ uri: 'https://raw.githubusercontent.com/your-username/your-repo/main/assets/logo.png' }}
           style={styles.logo}
-          resizeMode="contain"
         />
+        <Text style={styles.title}>Bênção Match</Text>
+        <Text style={styles.subtitle}>Conexões abençoadas</Text>
       </Animated.View>
     </View>
   );
@@ -58,7 +64,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 150,
+    height: 150,
+    marginBottom: Theme.spacing.md,
+  },
+  title: {
+    fontFamily: Theme.typography.fontFamily.heading,
+    fontSize: Theme.typography.fontSize.xxxl,
+    color: Theme.colors.background.white,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  subtitle: {
+    fontFamily: Theme.typography.fontFamily.verse,
+    fontSize: Theme.typography.fontSize.lg,
+    color: Theme.colors.background.white,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
