@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -13,7 +13,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = useCallback(async () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       setError('Por favor, preencha todos os campos');
       return;
@@ -35,7 +35,7 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
-  }, [email, password]);
+  };
 
   return (
     <View style={styles.container}>

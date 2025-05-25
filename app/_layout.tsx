@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -15,9 +15,12 @@ import {
 import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
 import { SplashScreen } from 'expo-router';
 
+// Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  useFrameworkReady();
+
   const [fontsLoaded, fontError] = useFonts({
     'Montserrat-Regular': Montserrat_400Regular,
     'Montserrat-SemiBold': Montserrat_600SemiBold,
@@ -27,14 +30,13 @@ export default function RootLayout() {
     'PlayfairDisplay-Italic': PlayfairDisplay_400Regular_Italic
   });
 
-  useFrameworkReady();
-
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
+  // Return null to keep splash screen visible while fonts load
   if (!fontsLoaded && !fontError) {
     return null;
   }
@@ -42,9 +44,8 @@ export default function RootLayout() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
