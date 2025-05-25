@@ -4,11 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler, Users, GraduationCap, Radiation as Zodiac, BookOpen } from 'lucide-react-native';
+import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler, Users, GraduationCap, Radiation as Zodiac, BookOpen, Globe } from 'lucide-react-native';
 import DenominationModal from '@/components/UI/DenominationModal';
 import LocationModal from '@/components/UI/LocationModal';
 import PhotoUpload from '@/components/UI/PhotoUpload';
 import MoreAboutMeModal from '@/components/UI/MoreAboutMeModal';
+import LanguagesModal from '@/components/UI/LanguagesModal';
 import * as ImagePicker from 'expo-image-picker';
 
 const EDUCATION_LEVELS = [
@@ -46,7 +47,6 @@ export default function SignupScreen() {
   const [favoriteWorship, setFavoriteWorship] = useState('');
   const [height, setHeight] = useState('');
   
-  // More About Me fields
   const [children, setChildren] = useState('0');
   const [education, setEducation] = useState<string>();
   const [zodiacSign, setZodiacSign] = useState<string>();
@@ -55,6 +55,8 @@ export default function SignupScreen() {
   const [zodiacModalVisible, setZodiacModalVisible] = useState(false);
   const [churchFrequencyModalVisible, setChurchFrequencyModalVisible] = useState(false);
   const [childrenModalVisible, setChildrenModalVisible] = useState(false);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [languagesModalVisible, setLanguagesModalVisible] = useState(false);
 
   const handleSelectPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -314,6 +316,25 @@ export default function SignupScreen() {
                   <ChevronRight size={20} color={Theme.colors.text.medium} />
                 </View>
               </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.moreAboutMeRow}
+                onPress={() => setLanguagesModalVisible(true)}
+              >
+                <Globe size={20} color={Theme.colors.text.medium} />
+                <Text style={styles.moreAboutMeLabel}>Línguas faladas</Text>
+                <View style={styles.selectContainer}>
+                  <Text style={[
+                    styles.selectText,
+                    languages.length > 0 && styles.selectedText
+                  ]}>
+                    {languages.length > 0 
+                      ? languages.join(', ')
+                      : 'Selecione'}
+                  </Text>
+                  <ChevronRight size={20} color={Theme.colors.text.medium} />
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
           
@@ -392,6 +413,13 @@ export default function SignupScreen() {
         selectedValue={churchFrequency}
         options={Array.from({ length: 7 }, (_, i) => (i + 1).toString())}
         title="Frequência na Igreja"
+      />
+
+      <LanguagesModal
+        visible={languagesModalVisible}
+        onClose={() => setLanguagesModalVisible(false)}
+        onSelect={setLanguages}
+        selectedLanguages={languages}
       />
     </View>
   );
