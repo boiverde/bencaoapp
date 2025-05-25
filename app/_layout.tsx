@@ -45,10 +45,28 @@ export default function RootLayout() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+        <Stack.Screen name="index" />
+        <Stack.Screen 
+          name="(auth)" 
+          options={{ 
+            headerShown: false,
+            animation: 'none' 
+          }} 
+        />
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false,
+            animation: 'fade' 
+          }} 
+        />
+        <Stack.Screen 
+          name="+not-found" 
+          options={{ 
+            presentation: 'modal',
+            animation: 'fade' 
+          }} 
+        />
       </Stack>
       <StatusBar style="auto" />
     </>

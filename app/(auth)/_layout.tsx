@@ -6,14 +6,14 @@ export default function AuthLayout() {
       <Stack.Screen 
         name="login" 
         options={{ 
-          animation: 'none',
+          animation: 'fade',
           presentation: 'card' 
         }} 
       />
       <Stack.Screen 
         name="signup" 
         options={{ 
-          animation: 'none',
+          animation: 'slide-from-right',
           presentation: 'card' 
         }} 
       />
