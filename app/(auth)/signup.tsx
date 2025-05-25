@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music } from 'lucide-react-native';
+import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler } from 'lucide-react-native';
 import DenominationModal from '@/components/UI/DenominationModal';
 import LocationModal from '@/components/UI/LocationModal';
 import PhotoUpload from '@/components/UI/PhotoUpload';
@@ -18,6 +18,7 @@ export default function SignupScreen() {
   const [photo, setPhoto] = useState<string>();
   const [aboutMe, setAboutMe] = useState('');
   const [favoriteWorship, setFavoriteWorship] = useState('');
+  const [height, setHeight] = useState('');
 
   const handleSelectPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -41,6 +42,14 @@ export default function SignupScreen() {
   const handleFavoriteWorshipChange = (text: string) => {
     if (text.length <= 30) {
       setFavoriteWorship(text);
+    }
+  };
+
+  const handleHeightChange = (text: string) => {
+    // Only allow numbers
+    const numericValue = text.replace(/[^0-9]/g, '');
+    if (numericValue.length <= 3) { // Limit to 3 digits
+      setHeight(numericValue);
     }
   };
 
@@ -84,6 +93,21 @@ export default function SignupScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="numeric"
             />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Ruler size={20} color={Theme.colors.text.medium} />
+            <TextInput
+              style={styles.input}
+              placeholder="Altura"
+              placeholderTextColor={Theme.colors.text.medium}
+              keyboardType="numeric"
+              value={height}
+              onChangeText={handleHeightChange}
+            />
+            {height.length > 0 && (
+              <Text style={styles.heightUnit}>cm</Text>
+            )}
           </View>
           
           <TouchableOpacity 
@@ -298,6 +322,13 @@ const styles = StyleSheet.create({
     paddingVertical: Theme.spacing.md,
     marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
+  },
+  heightUnit: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.medium,
+    marginLeft: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.md,
   },
   selectContainer: {
     flex: 1,
