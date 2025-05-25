@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -19,6 +19,7 @@ import { SplashScreen } from 'expo-router';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [isMounted, setIsMounted] = useState(false);
   useFrameworkReady();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -31,14 +32,19 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      // Hide splash screen after fonts are loaded
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && (fontsLoaded || fontError)) {
+      // Hide splash screen after fonts are loaded and component is mounted
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [isMounted, fontsLoaded, fontError]);
 
   // Return null to keep splash screen visible while fonts load
-  if (!fontsLoaded && !fontError) {
+  if (!isMounted || (!fontsLoaded && !fontError)) {
     return null;
   }
 
