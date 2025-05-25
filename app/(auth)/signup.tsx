@@ -8,6 +8,7 @@ import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler,
 import DenominationModal from '@/components/UI/DenominationModal';
 import LocationModal from '@/components/UI/LocationModal';
 import PhotoUpload from '@/components/UI/PhotoUpload';
+import MoreAboutMeModal from '@/components/UI/MoreAboutMeModal';
 import * as ImagePicker from 'expo-image-picker';
 
 const EDUCATION_LEVELS = [
@@ -50,6 +51,10 @@ export default function SignupScreen() {
   const [education, setEducation] = useState<string>();
   const [zodiacSign, setZodiacSign] = useState<string>();
   const [churchFrequency, setChurchFrequency] = useState('1');
+  const [educationModalVisible, setEducationModalVisible] = useState(false);
+  const [zodiacModalVisible, setZodiacModalVisible] = useState(false);
+  const [churchFrequencyModalVisible, setChurchFrequencyModalVisible] = useState(false);
+  const [childrenModalVisible, setChildrenModalVisible] = useState(false);
 
   const handleSelectPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -242,102 +247,73 @@ export default function SignupScreen() {
             <Text style={styles.sectionTitle}>Mais sobre mim</Text>
             
             <View style={styles.moreAboutMeSection}>
-              <View style={styles.moreAboutMeRow}>
+              <TouchableOpacity 
+                style={styles.moreAboutMeRow}
+                onPress={() => setChildrenModalVisible(true)}
+              >
                 <Users size={20} color={Theme.colors.text.medium} />
                 <Text style={styles.moreAboutMeLabel}>Filhos</Text>
-                <View style={styles.pickerContainer}>
-                  {Array.from({ length: 11 }, (_, i) => (
-                    <TouchableOpacity
-                      key={i}
-                      style={[
-                        styles.numberOption,
-                        children === i.toString() && styles.numberOptionSelected
-                      ]}
-                      onPress={() => setChildren(i.toString())}
-                    >
-                      <Text style={[
-                        styles.numberOptionText,
-                        children === i.toString() && styles.numberOptionTextSelected
-                      ]}>
-                        {i}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={styles.selectContainer}>
+                  <Text style={[
+                    styles.selectText,
+                    children && styles.selectedText
+                  ]}>
+                    {children || 'Selecione'}
+                  </Text>
+                  <ChevronRight size={20} color={Theme.colors.text.medium} />
                 </View>
-              </View>
+              </TouchableOpacity>
 
-              <View style={styles.moreAboutMeRow}>
+              <TouchableOpacity 
+                style={styles.moreAboutMeRow}
+                onPress={() => setEducationModalVisible(true)}
+              >
                 <GraduationCap size={20} color={Theme.colors.text.medium} />
                 <Text style={styles.moreAboutMeLabel}>Formação</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.educationScroll}>
-                  {EDUCATION_LEVELS.map((level) => (
-                    <TouchableOpacity
-                      key={level}
-                      style={[
-                        styles.educationOption,
-                        education === level && styles.educationOptionSelected
-                      ]}
-                      onPress={() => setEducation(level)}
-                    >
-                      <Text style={[
-                        styles.educationOptionText,
-                        education === level && styles.educationOptionTextSelected
-                      ]}>
-                        {level}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
+                <View style={styles.selectContainer}>
+                  <Text style={[
+                    styles.selectText,
+                    education && styles.selectedText
+                  ]}>
+                    {education || 'Selecione'}
+                  </Text>
+                  <ChevronRight size={20} color={Theme.colors.text.medium} />
+                </View>
+              </TouchableOpacity>
 
-              <View style={styles.moreAboutMeRow}>
+              <TouchableOpacity 
+                style={styles.moreAboutMeRow}
+                onPress={() => setZodiacModalVisible(true)}
+              >
                 <Zodiac size={20} color={Theme.colors.text.medium} />
                 <Text style={styles.moreAboutMeLabel}>Signo</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.zodiacScroll}>
-                  {ZODIAC_SIGNS.map((sign) => (
-                    <TouchableOpacity
-                      key={sign}
-                      style={[
-                        styles.zodiacOption,
-                        zodiacSign === sign && styles.zodiacOptionSelected
-                      ]}
-                      onPress={() => setZodiacSign(sign)}
-                    >
-                      <Text style={[
-                        styles.zodiacOptionText,
-                        zodiacSign === sign && styles.zodiacOptionTextSelected
-                      ]}>
-                        {sign}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
+                <View style={styles.selectContainer}>
+                  <Text style={[
+                    styles.selectText,
+                    zodiacSign && styles.selectedText
+                  ]}>
+                    {zodiacSign || 'Selecione'}
+                  </Text>
+                  <ChevronRight size={20} color={Theme.colors.text.medium} />
+                </View>
+              </TouchableOpacity>
 
-              <View style={styles.moreAboutMeRow}>
+              <TouchableOpacity 
+                style={styles.moreAboutMeRow}
+                onPress={() => setChurchFrequencyModalVisible(true)}
+              >
                 <BookOpen size={20} color={Theme.colors.text.medium} />
                 <Text style={styles.moreAboutMeLabel}>Frequência na Igreja</Text>
-                <View style={styles.pickerContainer}>
-                  {Array.from({ length: 7 }, (_, i) => (
-                    <TouchableOpacity
-                      key={i + 1}
-                      style={[
-                        styles.numberOption,
-                        churchFrequency === (i + 1).toString() && styles.numberOptionSelected
-                      ]}
-                      onPress={() => setChurchFrequency((i + 1).toString())}
-                    >
-                      <Text style={[
-                        styles.numberOptionText,
-                        churchFrequency === (i + 1).toString() && styles.numberOptionTextSelected
-                      ]}>
-                        {i + 1}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={styles.selectContainer}>
+                  <Text style={[
+                    styles.selectText,
+                    churchFrequency && styles.selectedText
+                  ]}>
+                    {churchFrequency ? `${churchFrequency}x por semana` : 'Selecione'}
+                  </Text>
+                  <ChevronRight size={20} color={Theme.colors.text.medium} />
                 </View>
-                <Text style={styles.frequencyUnit}>vezes por semana</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
           
@@ -380,6 +356,42 @@ export default function SignupScreen() {
         onSelect={setSelectedLocation}
         selectedState={selectedLocation.state}
         selectedCity={selectedLocation.city}
+      />
+
+      <MoreAboutMeModal
+        visible={childrenModalVisible}
+        onClose={() => setChildrenModalVisible(false)}
+        onSelect={setChildren}
+        selectedValue={children}
+        options={Array.from({ length: 11 }, (_, i) => i.toString())}
+        title="Número de Filhos"
+      />
+
+      <MoreAboutMeModal
+        visible={educationModalVisible}
+        onClose={() => setEducationModalVisible(false)}
+        onSelect={setEducation}
+        selectedValue={education}
+        options={EDUCATION_LEVELS}
+        title="Nível de Escolaridade"
+      />
+
+      <MoreAboutMeModal
+        visible={zodiacModalVisible}
+        onClose={() => setZodiacModalVisible(false)}
+        onSelect={setZodiacSign}
+        selectedValue={zodiacSign}
+        options={ZODIAC_SIGNS}
+        title="Signo"
+      />
+
+      <MoreAboutMeModal
+        visible={churchFrequencyModalVisible}
+        onClose={() => setChurchFrequencyModalVisible(false)}
+        onSelect={setChurchFrequency}
+        selectedValue={churchFrequency}
+        options={Array.from({ length: 7 }, (_, i) => (i + 1).toString())}
+        title="Frequência na Igreja"
       />
     </View>
   );
@@ -545,7 +557,9 @@ const styles = StyleSheet.create({
   moreAboutMeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Theme.spacing.md,
+    paddingVertical: Theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.ui.border,
   },
   moreAboutMeLabel: {
     fontFamily: Theme.typography.fontFamily.body,
@@ -553,79 +567,6 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.dark,
     marginLeft: Theme.spacing.sm,
     width: 100,
-  },
-  pickerContainer: {
-    flexDirection: 'row',
-    flex: 1,
-    justifyContent: 'space-around',
-  },
-  numberOption: {
-    width: 30,
-    height: 30,
-    borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.background.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 2,
-  },
-  numberOptionSelected: {
-    backgroundColor: Theme.colors.primary.blue,
-  },
-  numberOptionText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.dark,
-  },
-  numberOptionTextSelected: {
-    color: Theme.colors.background.white,
-  },
-  educationScroll: {
-    flex: 1,
-  },
-  educationOption: {
-    paddingHorizontal: Theme.spacing.sm,
-    paddingVertical: Theme.spacing.xs,
-    borderRadius: Theme.borderRadius.md,
-    backgroundColor: Theme.colors.background.white,
-    marginRight: Theme.spacing.xs,
-  },
-  educationOptionSelected: {
-    backgroundColor: Theme.colors.primary.blue,
-  },
-  educationOptionText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.dark,
-  },
-  educationOptionTextSelected: {
-    color: Theme.colors.background.white,
-  },
-  zodiacScroll: {
-    flex: 1,
-  },
-  zodiacOption: {
-    paddingHorizontal: Theme.spacing.sm,
-    paddingVertical: Theme.spacing.xs,
-    borderRadius: Theme.borderRadius.md,
-    backgroundColor: Theme.colors.background.white,
-    marginRight: Theme.spacing.xs,
-  },
-  zodiacOptionSelected: {
-    backgroundColor: Theme.colors.primary.blue,
-  },
-  zodiacOptionText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.dark,
-  },
-  zodiacOptionTextSelected: {
-    color: Theme.colors.background.white,
-  },
-  frequencyUnit: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-    marginLeft: Theme.spacing.sm,
   },
   signupButton: {
     flexDirection: 'row',
