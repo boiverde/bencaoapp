@@ -21,34 +21,47 @@ export function useAuth() {
     };
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      safeSetState(() => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      });
-    });
+    let subscription: { unsubscribe: () => void } | null = null;
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      safeSetState(() => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        safeSetState(() => {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        });
 
-        // Redirect based on auth state
-        if (session) {
-          router.replace('/(tabs)');
-        } else {
-          router.replace('/(auth)/login');
-        }
-      });
-    });
+        // Listen for auth changes only after initial session is handled
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (isMounted.current) {
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            // Redirect based on auth state
+            if (session) {
+              router.replace('/(tabs)');
+            } else {
+              router.replace('/(auth)/login');
+            }
+          }
+        });
+        
+        subscription = sub;
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        safeSetState(() => setLoading(false));
+      }
+    };
+
+    initAuth();
 
     // Cleanup function
     return () => {
       isMounted.current = false;
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
