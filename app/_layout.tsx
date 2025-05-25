@@ -15,13 +15,9 @@ import {
 import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
 import { SplashScreen } from 'expo-router';
 
-// Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [isMounted, setIsMounted] = useState(false);
-  useFrameworkReady();
-
   const [fontsLoaded, fontError] = useFonts({
     'Montserrat-Regular': Montserrat_400Regular,
     'Montserrat-SemiBold': Montserrat_600SemiBold,
@@ -31,20 +27,15 @@ export default function RootLayout() {
     'PlayfairDisplay-Italic': PlayfairDisplay_400Regular_Italic
   });
 
-  useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
-  }, []);
+  useFrameworkReady();
 
   useEffect(() => {
-    if (isMounted && (fontsLoaded || fontError)) {
-      // Hide splash screen after fonts are loaded and component is mounted
+    if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
-  }, [isMounted, fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError]);
 
-  // Return null to keep splash screen visible while fonts load
-  if (!isMounted || (!fontsLoaded && !fontError)) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
