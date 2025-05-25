@@ -46,9 +46,11 @@ export default function SignupScreen() {
   };
 
   const handleHeightChange = (text: string) => {
-    // Only allow numbers
+    // Remove any non-numeric characters
     const numericValue = text.replace(/[^0-9]/g, '');
-    if (numericValue.length <= 3) { // Limit to 3 digits
+    
+    // Limit to 3 digits
+    if (numericValue.length <= 3) {
       setHeight(numericValue);
     }
   };
