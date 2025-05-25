@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Image } from 'react-native';
 import Colors from '@/constants/Colors';
 import { Heart, MessageSquare, Calendar, User, Search } from 'lucide-react-native';
 

@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
@@ -17,6 +17,13 @@ export default function SignupScreen() {
       />
       
       <View style={styles.logoContainer}>
+        <View style={styles.logoWrapper}>
+          <Image 
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
         <Text style={styles.logoText}>Bênção Match</Text>
         <Text style={styles.logoSubtext}>Comece sua jornada abençoada</Text>
       </View>
@@ -125,6 +132,20 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginTop: Theme.spacing.xl,
+  },
+  logoWrapper: {
+    width: 120,
+    height: 120,
+    backgroundColor: Theme.colors.background.white,
+    borderRadius: Theme.borderRadius.circle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Theme.spacing.md,
+    ...Theme.shadows.medium,
+  },
+  logo: {
+    width: 80,
+    height: 80,
   },
   logoText: {
     fontFamily: Theme.typography.fontFamily.heading,
