@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -15,6 +15,13 @@ export default function SignupScreen() {
   const [birthDate, setBirthDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const handleSignup = useCallback(async () => {
     if (!fullName || !email || !password || !confirmPassword || !birthDate) {
@@ -27,6 +34,7 @@ export default function SignupScreen() {
       return;
     }
 
+    if (!isMounted.current) return;
     setLoading(true);
     setError(null);
 
@@ -34,14 +42,20 @@ export default function SignupScreen() {
       const { error: signUpError } = await signUpWithEmail(email, password);
       
       if (signUpError) {
-        setError(signUpError.message);
+        if (isMounted.current) {
+          setError(signUpError.message);
+        }
       } else {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      setError('Ocorreu um erro ao criar sua conta');
+      if (isMounted.current) {
+        setError('Ocorreu um erro ao criar sua conta');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   }, [fullName, email, password, confirmPassword, birthDate]);
 
