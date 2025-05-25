@@ -10,17 +10,19 @@ module.exports = {
   resolver: {
     ...defaultConfig.resolver,
     extraNodeModules: {
-      // Only include essential modules that we know exist
+      '@': path.resolve(__dirname),
       'react': path.resolve(__dirname, 'node_modules/react'),
       'react-native': path.resolve(__dirname, 'node_modules/react-native'),
       '@supabase/supabase-js': path.resolve(__dirname, 'node_modules/@supabase/supabase-js'),
     },
-    sourceExts: [
-      ...defaultConfig.resolver.sourceExts,
-      'mjs',
-      'cjs'
-    ]
+    sourceExts: [...defaultConfig.resolver.sourceExts, 'mjs', 'cjs'],
+    assetExts: [...defaultConfig.resolver.assetExts],
+    platforms: ['ios', 'android', 'web']
   },
-  // Use the default watcher configuration
-  watchFolders: [__dirname]
+  transformer: {
+    ...defaultConfig.transformer,
+    assetPlugins: ['expo-asset/tools/hashAssetFiles'],
+  },
+  watchFolders: [path.resolve(__dirname)],
+  maxWorkers: 2
 };
