@@ -14,6 +14,8 @@ import {
 } from '@expo-google-fonts/open-sans';
 import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
 import { SplashScreen } from 'expo-router';
+import { getCurrentSession } from '@/lib/supabase';
+import { router } from 'expo-router';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -31,12 +33,21 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    async function checkSession() {
+      const { data: { session } } = await getCurrentSession();
+      if (session) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/(auth)/login');
+      }
+    }
+
     if (fontsLoaded || fontError) {
+      checkSession();
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
-  // Return null to keep splash screen visible while fonts load
   if (!fontsLoaded && !fontError) {
     return null;
   }
