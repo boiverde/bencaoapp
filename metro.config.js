@@ -1,13 +1,10 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
-// Get the default Expo config
 const config = getDefaultConfig(__dirname);
 
-// Add proper module resolution
-config.resolver.nodeModulesPaths = [__dirname];
-
-// Ensure proper module resolution for TypeScript and assets
-config.resolver.sourceExts = ['js', 'jsx', 'ts', 'tsx', 'json'];
-config.resolver.assetExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'ttf'];
+config.resolver.extraNodeModules = {
+  '@': path.resolve(__dirname),
+};
 
 module.exports = config;
