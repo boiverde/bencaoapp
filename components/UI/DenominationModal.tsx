@@ -22,8 +22,22 @@ const DENOMINATIONS = [
   'Deus é Amor',
   'Fonte da Vida',
   'Igreja Adventista da Promessa',
-  'Internacional da Graça de Deus'
-];
+  'Internacional da Graça de Deus',
+  'Lagoinha',
+  'Luterana',
+  'Maranata',
+  'Metodista',
+  'Mundial do Poder de Deus',
+  'O Brasil Para Cristo',
+  'Paz e Vida',
+  'Presbiteriana',
+  'Quadrangular',
+  'Renascer em Cristo',
+  'Santos dos Últimos Dias',
+  'Sara Nossa Terra',
+  'Universal do Reino de Deus',
+  'Outra'
+].sort((a, b) => a.localeCompare(b));
 
 export default function DenominationModal({ visible, onClose, onSelect, selectedDenomination }: DenominationModalProps) {
   return (
