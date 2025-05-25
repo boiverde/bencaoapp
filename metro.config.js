@@ -1,19 +1,13 @@
 const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
 
-// Get the default config
+// Get the default Expo config
 const config = getDefaultConfig(__dirname);
 
-// Add custom config
-config.resolver.extraNodeModules = {
-  '@': path.resolve(__dirname),
-};
+// Add proper module resolution
+config.resolver.nodeModulesPaths = [__dirname];
 
-// Ensure proper module resolution
-config.resolver.sourceExts = ['js', 'jsx', 'json', 'ts', 'tsx'];
-config.resolver.assetExts = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
-
-// Add watchFolders to include project root
-config.watchFolders = [path.resolve(__dirname)];
+// Ensure proper module resolution for TypeScript and assets
+config.resolver.sourceExts = ['js', 'jsx', 'ts', 'tsx', 'json'];
+config.resolver.assetExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'ttf'];
 
 module.exports = config;
