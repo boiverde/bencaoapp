@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Search, Filter, Heart, MessageSquare, Image as ImageIcon, Camera, MoreVertical } from 'lucide-react-native';
+import { Search, Filter, Heart, MessageSquare, Image as ImageIcon, Camera, MoveVertical as MoreVertical } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 // Mock data
