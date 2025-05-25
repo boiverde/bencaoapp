@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
@@ -7,22 +7,31 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
+    // Set up mounted ref
+    isMounted.current = true;
+
+    // Safe setState function that checks if component is mounted
+    const safeSetState = (callback: () => void) => {
+      if (isMounted.current) {
+        callback();
+      }
+    };
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (isMounted) {
+      safeSetState(() => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-      }
+      });
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) {
+      safeSetState(() => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -33,11 +42,12 @@ export function useAuth() {
         } else {
           router.replace('/(auth)/login');
         }
-      }
+      });
     });
 
+    // Cleanup function
     return () => {
-      isMounted = false;
+      isMounted.current = false;
       subscription.unsubscribe();
     };
   }, []);
