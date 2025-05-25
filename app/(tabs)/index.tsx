@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Image, Animated, PanResponder } from 'react-nat
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Heart, X, MapPin, Globe, Church } from 'lucide-react-native';
+import { Heart, X, MapPin, Globe, Church, Star } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
 // Mock data
@@ -95,6 +95,13 @@ export default function DiscoverScreen() {
     });
   };
 
+  const handleFollow = () => {
+    // Here you would implement the follow functionality
+    // For now, we'll just show a visual feedback
+    const profile = PROFILES[currentIndex];
+    console.log(`Following ${profile.name}`);
+  };
+
   if (currentIndex >= PROFILES.length) {
     return (
       <SafeAreaView style={styles.container}>
@@ -161,6 +168,9 @@ export default function DiscoverScreen() {
       <View style={styles.actionsContainer}>
         <TouchableOpacity style={[styles.actionButton, styles.passButton]} onPress={handlePass}>
           <X size={30} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.actionButton, styles.followButton]} onPress={handleFollow}>
+          <Star size={30} color="#fff" fill="#fff" />
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionButton, styles.likeButton]} onPress={handleLike}>
           <Heart size={30} color="#fff" fill="#fff" />
@@ -267,11 +277,14 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.circle,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: Theme.spacing.md,
+    marginHorizontal: Theme.spacing.sm,
     ...Theme.shadows.small,
   },
   passButton: {
     backgroundColor: Theme.colors.status.error,
+  },
+  followButton: {
+    backgroundColor: Theme.colors.primary.gold,
   },
   likeButton: {
     backgroundColor: Theme.colors.primary.pink,
