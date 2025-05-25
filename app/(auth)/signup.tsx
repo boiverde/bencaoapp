@@ -1,18 +1,15 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church, ImagePlus } from 'lucide-react-native';
+import { Mail, Lock, User, Calendar, ChevronRight, Church } from 'lucide-react-native';
 import DenominationModal from '@/components/UI/DenominationModal';
-import PhotoUploadModal from '@/components/UI/PhotoUploadModal';
 
 export default function SignupScreen() {
   const [denominationModalVisible, setDenominationModalVisible] = useState(false);
-  const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [selectedDenomination, setSelectedDenomination] = useState<string>();
-  const [photos, setPhotos] = useState<string[]>([]);
 
   return (
     <View style={styles.container}>
@@ -33,26 +30,6 @@ export default function SignupScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Criar Conta</Text>
           <Text style={styles.cardSubtitle}>Preencha seus dados para começar</Text>
-          
-          <TouchableOpacity 
-            style={styles.photoUploadContainer}
-            onPress={() => setPhotoModalVisible(true)}
-          >
-            {photos.length > 0 ? (
-              <View style={styles.photoPreviewContainer}>
-                <Image source={{ uri: photos[0] }} style={styles.mainPhoto} />
-                <View style={styles.photoCount}>
-                  <Text style={styles.photoCountText}>{photos.length}/5</Text>
-                </View>
-              </View>
-            ) : (
-              <>
-                <ImagePlus size={40} color={Theme.colors.text.medium} />
-                <Text style={styles.photoUploadText}>Adicionar Fotos</Text>
-                <Text style={styles.photoUploadSubtext}>Adicione até 5 fotos</Text>
-              </>
-            )}
-          </TouchableOpacity>
           
           <View style={styles.inputContainer}>
             <User size={20} color={Theme.colors.text.medium} />
@@ -153,13 +130,6 @@ export default function SignupScreen() {
         onSelect={setSelectedDenomination}
         selectedDenomination={selectedDenomination}
       />
-
-      <PhotoUploadModal
-        visible={photoModalVisible}
-        onClose={() => setPhotoModalVisible(false)}
-        photos={photos}
-        onPhotosChange={setPhotos}
-      />
     </View>
   );
 }
@@ -218,53 +188,6 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.text.medium,
     marginBottom: Theme.spacing.lg,
-  },
-  photoUploadContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.lg,
-    marginBottom: Theme.spacing.lg,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: Theme.colors.ui.border,
-  },
-  photoPreviewContainer: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: Theme.borderRadius.md,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  mainPhoto: {
-    width: '100%',
-    height: '100%',
-  },
-  photoCount: {
-    position: 'absolute',
-    bottom: Theme.spacing.sm,
-    right: Theme.spacing.sm,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.xs,
-  },
-  photoCountText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.background.white,
-  },
-  photoUploadText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.medium,
-    marginTop: Theme.spacing.md,
-  },
-  photoUploadSubtext: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-    marginTop: Theme.spacing.xs,
   },
   inputContainer: {
     flexDirection: 'row',
