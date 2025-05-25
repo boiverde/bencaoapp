@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight } from 'lucide-react-native';
+import { Mail, Lock, User, Calendar, ChevronRight, Church } from 'lucide-react-native';
+import DenominationModal from '@/components/UI/DenominationModal';
 
 export default function SignupScreen() {
+  const [denominationModalVisible, setDenominationModalVisible] = useState(false);
+  const [selectedDenomination, setSelectedDenomination] = useState<string>();
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -45,6 +50,22 @@ export default function SignupScreen() {
               keyboardType="numeric"
             />
           </View>
+          
+          <TouchableOpacity 
+            style={styles.inputContainer}
+            onPress={() => setDenominationModalVisible(true)}
+          >
+            <Church size={20} color={Theme.colors.text.medium} />
+            <View style={styles.denominationSelect}>
+              <Text style={[
+                styles.denominationSelectText,
+                selectedDenomination && styles.denominationSelectedText
+              ]}>
+                {selectedDenomination || 'Selecione sua denominação'}
+              </Text>
+              <ChevronRight size={20} color={Theme.colors.text.medium} />
+            </View>
+          </TouchableOpacity>
           
           <View style={styles.inputContainer}>
             <Mail size={20} color={Theme.colors.text.medium} />
@@ -102,6 +123,13 @@ export default function SignupScreen() {
       </ScrollView>
       
       <Text style={styles.verseText}>"Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará." Salmos 37:5</Text>
+
+      <DenominationModal
+        visible={denominationModalVisible}
+        onClose={() => setDenominationModalVisible(false)}
+        onSelect={setSelectedDenomination}
+        selectedDenomination={selectedDenomination}
+      />
     </View>
   );
 }
@@ -175,6 +203,22 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.md,
     paddingVertical: Theme.spacing.md,
     marginLeft: Theme.spacing.sm,
+    color: Theme.colors.text.dark,
+  },
+  denominationSelect: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Theme.spacing.md,
+    marginLeft: Theme.spacing.sm,
+  },
+  denominationSelectText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.medium,
+  },
+  denominationSelectedText: {
     color: Theme.colors.text.dark,
   },
   signupButton: {
