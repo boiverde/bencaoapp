@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -12,6 +12,13 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(true);
+
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -19,21 +26,27 @@ export default function LoginScreen() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    if (isMounted) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const { error } = await signInWithEmail(email, password);
       
-      if (error) {
+      if (error && isMounted) {
         setError('Email ou senha incorretos');
-      } else {
+      } else if (!error) {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      setError('Ocorreu um erro ao fazer login');
+      if (isMounted) {
+        setError('Ocorreu um erro ao fazer login');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 

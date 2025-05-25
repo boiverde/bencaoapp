@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -15,6 +15,13 @@ export default function SignupScreen() {
   const [birthDate, setBirthDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(true);
+
+  useEffect(() => {
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   const handleSignup = async () => {
     if (!fullName || !email || !password || !confirmPassword || !birthDate) {
@@ -27,21 +34,27 @@ export default function SignupScreen() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    if (isMounted) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const { error } = await signUpWithEmail(email, password);
       
-      if (error) {
+      if (error && isMounted) {
         setError(error.message);
       } else {
         router.replace('/(tabs)');
       }
     } catch (err) {
-      setError('Ocorreu um erro ao criar sua conta');
+      if (isMounted) {
+        setError('Ocorreu um erro ao criar sua conta');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 
