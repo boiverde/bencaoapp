@@ -13,106 +13,93 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
+  const abortController = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    // Set mounted flag
-    isMounted.current = true;
-    
-    // Cleanup function to handle unmounting
     return () => {
       isMounted.current = false;
+      // Cancel any pending requests
+      if (abortController.current) {
+        abortController.current.abort();
+      }
     };
+  }, []);
+
+  const safeSetState = useCallback(<T extends unknown>(
+    setter: React.Dispatch<React.SetStateAction<T>>,
+    value: T
+  ) => {
+    if (isMounted.current) {
+      setter(value);
+    }
   }, []);
 
   const handleLogin = useCallback(async () => {
     if (!email || !password) {
-      setError('Por favor, preencha todos os campos');
+      safeSetState(setError, 'Por favor, preencha todos os campos');
       return;
     }
 
-    if (!isMounted.current) return;
+    // Create new AbortController for this request
+    abortController.current = new AbortController();
     
-    setLoading(true);
-    setError(null);
+    safeSetState(setLoading, true);
+    safeSetState(setError, null);
 
     try {
       const { error: signInError } = await signInWithEmail(email, password);
       
       if (signInError) {
-        if (isMounted.current) {
-          setError('Email ou senha incorretos');
-        }
-      } else {
-        if (isMounted.current) {
-          router.replace('/(tabs)');
-        }
+        safeSetState(setError, 'Email ou senha incorretos');
+      } else if (isMounted.current) {
+        router.replace('/(tabs)');
       }
     } catch (err) {
-      if (isMounted.current) {
-        setError('Ocorreu um erro ao fazer login');
-      }
+      safeSetState(setError, 'Ocorreu um erro ao fazer login');
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      safeSetState(setLoading, false);
     }
-  }, [email, password]);
+  }, [email, password, safeSetState]);
 
   const handleGoogleLogin = useCallback(async () => {
-    if (!isMounted.current) return;
-
-    setLoading(true);
-    setError(null);
+    abortController.current = new AbortController();
+    
+    safeSetState(setLoading, true);
+    safeSetState(setError, null);
 
     try {
       const { error } = await signInWithGoogle();
       if (error) {
-        if (isMounted.current) {
-          setError('Erro ao fazer login com Google');
-        }
-      } else {
-        if (isMounted.current) {
-          router.replace('/(tabs)');
-        }
+        safeSetState(setError, 'Erro ao fazer login com Google');
+      } else if (isMounted.current) {
+        router.replace('/(tabs)');
       }
     } catch (err) {
-      if (isMounted.current) {
-        setError('Ocorreu um erro ao fazer login com Google');
-      }
+      safeSetState(setError, 'Ocorreu um erro ao fazer login com Google');
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      safeSetState(setLoading, false);
     }
-  }, []);
+  }, [safeSetState]);
 
   const handleFacebookLogin = useCallback(async () => {
-    if (!isMounted.current) return;
-
-    setLoading(true);
-    setError(null);
+    abortController.current = new AbortController();
+    
+    safeSetState(setLoading, true);
+    safeSetState(setError, null);
 
     try {
       const { error } = await signInWithFacebook();
       if (error) {
-        if (isMounted.current) {
-          setError('Erro ao fazer login com Facebook');
-        }
-      } else {
-        if (isMounted.current) {
-          router.replace('/(tabs)');
-        }
+        safeSetState(setError, 'Erro ao fazer login com Facebook');
+      } else if (isMounted.current) {
+        router.replace('/(tabs)');
       }
     } catch (err) {
-      if (isMounted.current) {
-        setError('Ocorreu um erro ao fazer login com Facebook');
-      }
+      safeSetState(setError, 'Ocorreu um erro ao fazer login com Facebook');
     } finally {
-      if (isMounted.current) {
-        setLoading(false);
-      }
+      safeSetState(setLoading, false);
     }
-  }, []);
+  }, [safeSetState]);
 
   return (
     <View style={styles.container}>
