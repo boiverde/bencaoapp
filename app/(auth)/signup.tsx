@@ -4,11 +4,36 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler } from 'lucide-react-native';
+import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler, Users, GraduationCap, Zodiac, BookOpen } from 'lucide-react-native';
 import DenominationModal from '@/components/UI/DenominationModal';
 import LocationModal from '@/components/UI/LocationModal';
 import PhotoUpload from '@/components/UI/PhotoUpload';
 import * as ImagePicker from 'expo-image-picker';
+
+const EDUCATION_LEVELS = [
+  'Ensino Fundamental',
+  'Ensino Médio',
+  'Ensino Técnico',
+  'Graduação',
+  'Pós-graduação',
+  'Mestrado',
+  'Doutorado'
+];
+
+const ZODIAC_SIGNS = [
+  'Áries',
+  'Touro',
+  'Gêmeos',
+  'Câncer',
+  'Leão',
+  'Virgem',
+  'Libra',
+  'Escorpião',
+  'Sagitário',
+  'Capricórnio',
+  'Aquário',
+  'Peixes'
+];
 
 export default function SignupScreen() {
   const [denominationModalVisible, setDenominationModalVisible] = useState(false);
@@ -19,6 +44,12 @@ export default function SignupScreen() {
   const [aboutMe, setAboutMe] = useState('');
   const [favoriteWorship, setFavoriteWorship] = useState('');
   const [height, setHeight] = useState('');
+  
+  // More About Me fields
+  const [children, setChildren] = useState('0');
+  const [education, setEducation] = useState<string>();
+  const [zodiacSign, setZodiacSign] = useState<string>();
+  const [churchFrequency, setChurchFrequency] = useState('1');
 
   const handleSelectPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -46,10 +77,7 @@ export default function SignupScreen() {
   };
 
   const handleHeightChange = (text: string) => {
-    // Remove any non-numeric characters
     const numericValue = text.replace(/[^0-9]/g, '');
-    
-    // Limit to 3 digits
     if (numericValue.length <= 3) {
       setHeight(numericValue);
     }
@@ -208,6 +236,109 @@ export default function SignupScreen() {
             <Text style={styles.characterCount}>
               {favoriteWorship.length}/30 caracteres
             </Text>
+          </View>
+
+          <View style={styles.moreAboutMeContainer}>
+            <Text style={styles.sectionTitle}>Mais sobre mim</Text>
+            
+            <View style={styles.moreAboutMeSection}>
+              <View style={styles.moreAboutMeRow}>
+                <Users size={20} color={Theme.colors.text.medium} />
+                <Text style={styles.moreAboutMeLabel}>Filhos</Text>
+                <View style={styles.pickerContainer}>
+                  {Array.from({ length: 11 }, (_, i) => (
+                    <TouchableOpacity
+                      key={i}
+                      style={[
+                        styles.numberOption,
+                        children === i.toString() && styles.numberOptionSelected
+                      ]}
+                      onPress={() => setChildren(i.toString())}
+                    >
+                      <Text style={[
+                        styles.numberOptionText,
+                        children === i.toString() && styles.numberOptionTextSelected
+                      ]}>
+                        {i}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.moreAboutMeRow}>
+                <GraduationCap size={20} color={Theme.colors.text.medium} />
+                <Text style={styles.moreAboutMeLabel}>Formação</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.educationScroll}>
+                  {EDUCATION_LEVELS.map((level) => (
+                    <TouchableOpacity
+                      key={level}
+                      style={[
+                        styles.educationOption,
+                        education === level && styles.educationOptionSelected
+                      ]}
+                      onPress={() => setEducation(level)}
+                    >
+                      <Text style={[
+                        styles.educationOptionText,
+                        education === level && styles.educationOptionTextSelected
+                      ]}>
+                        {level}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={styles.moreAboutMeRow}>
+                <Zodiac size={20} color={Theme.colors.text.medium} />
+                <Text style={styles.moreAboutMeLabel}>Signo</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.zodiacScroll}>
+                  {ZODIAC_SIGNS.map((sign) => (
+                    <TouchableOpacity
+                      key={sign}
+                      style={[
+                        styles.zodiacOption,
+                        zodiacSign === sign && styles.zodiacOptionSelected
+                      ]}
+                      onPress={() => setZodiacSign(sign)}
+                    >
+                      <Text style={[
+                        styles.zodiacOptionText,
+                        zodiacSign === sign && styles.zodiacOptionTextSelected
+                      ]}>
+                        {sign}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={styles.moreAboutMeRow}>
+                <BookOpen size={20} color={Theme.colors.text.medium} />
+                <Text style={styles.moreAboutMeLabel}>Frequência na Igreja</Text>
+                <View style={styles.pickerContainer}>
+                  {Array.from({ length: 7 }, (_, i) => (
+                    <TouchableOpacity
+                      key={i + 1}
+                      style={[
+                        styles.numberOption,
+                        churchFrequency === (i + 1).toString() && styles.numberOptionSelected
+                      ]}
+                      onPress={() => setChurchFrequency((i + 1).toString())}
+                    >
+                      <Text style={[
+                        styles.numberOptionText,
+                        churchFrequency === (i + 1).toString() && styles.numberOptionTextSelected
+                      ]}>
+                        {i + 1}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Text style={styles.frequencyUnit}>vezes por semana</Text>
+              </View>
+            </View>
           </View>
           
           <TouchableOpacity style={styles.signupButton}>
@@ -396,6 +527,105 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.medium,
     textAlign: 'right',
     marginTop: Theme.spacing.xs,
+  },
+  moreAboutMeContainer: {
+    marginBottom: Theme.spacing.lg,
+  },
+  sectionTitle: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.lg,
+    color: Theme.colors.text.dark,
+    marginBottom: Theme.spacing.md,
+  },
+  moreAboutMeSection: {
+    backgroundColor: Theme.colors.background.light,
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+  },
+  moreAboutMeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+  },
+  moreAboutMeLabel: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+    marginLeft: Theme.spacing.sm,
+    width: 100,
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'space-around',
+  },
+  numberOption: {
+    width: 30,
+    height: 30,
+    borderRadius: Theme.borderRadius.circle,
+    backgroundColor: Theme.colors.background.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 2,
+  },
+  numberOptionSelected: {
+    backgroundColor: Theme.colors.primary.blue,
+  },
+  numberOptionText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.dark,
+  },
+  numberOptionTextSelected: {
+    color: Theme.colors.background.white,
+  },
+  educationScroll: {
+    flex: 1,
+  },
+  educationOption: {
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.md,
+    backgroundColor: Theme.colors.background.white,
+    marginRight: Theme.spacing.xs,
+  },
+  educationOptionSelected: {
+    backgroundColor: Theme.colors.primary.blue,
+  },
+  educationOptionText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.dark,
+  },
+  educationOptionTextSelected: {
+    color: Theme.colors.background.white,
+  },
+  zodiacScroll: {
+    flex: 1,
+  },
+  zodiacOption: {
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.md,
+    backgroundColor: Theme.colors.background.white,
+    marginRight: Theme.spacing.xs,
+  },
+  zodiacOptionSelected: {
+    backgroundColor: Theme.colors.primary.blue,
+  },
+  zodiacOptionText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.dark,
+  },
+  zodiacOptionTextSelected: {
+    color: Theme.colors.background.white,
+  },
+  frequencyUnit: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.medium,
+    marginLeft: Theme.spacing.sm,
   },
   signupButton: {
     flexDirection: 'row',
