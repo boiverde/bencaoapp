@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Search, Filter, Heart, MessageSquare, Image as ImageIcon, Camera, MoveVertical as MoreVertical } from 'lucide-react-native';
+import { Search, Filter, Heart, Image as ImageIcon, Camera, MoveVertical as MoreVertical } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 // Mock data
@@ -15,9 +15,8 @@ const POSTS = [
       image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
     },
     image: 'https://images.pexels.com/photos/267559/pexels-photo-267559.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    caption: 'Momento especial de louvor na igreja hoje! 🙏✨',
+    caption: 'Momento especial de louvor na igreja hoje! Gratidão a Deus por mais um domingo abençoado com meus irmãos em Cristo. O Senhor tem feito maravilhas em nossas vidas. "Cantai ao Senhor um cântico novo, porque ele tem feito maravilhas; a sua destra e o seu braço santo lhe alcançaram a vitória." Salmos 98:1 🙏✨',
     likes: 45,
-    comments: 12,
     timestamp: '2h atrás',
   },
   {
@@ -28,9 +27,8 @@ const POSTS = [
       image: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
     },
     image: 'https://images.pexels.com/photos/236339/pexels-photo-236339.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    caption: 'Retiro de jovens 2025! Que Deus continue abençoando nossa juventude. 🙌',
+    caption: 'Retiro de jovens 2025! Que Deus continue abençoando nossa juventude. Foram dias intensos de comunhão, adoração e aprendizado da palavra. "Ninguém despreze a tua mocidade; mas sê o exemplo dos fiéis, na palavra, no trato, no amor, no espírito, na fé, na pureza." 1 Timóteo 4:12 🙌',
     likes: 38,
-    comments: 8,
     timestamp: '5h atrás',
   },
   {
@@ -41,15 +39,15 @@ const POSTS = [
       image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
     },
     image: 'https://images.pexels.com/photos/935944/pexels-photo-935944.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    caption: 'Gratidão pelo encontro de casais hoje. Que benção compartilhar experiências! ❤️',
+    caption: 'Gratidão pelo encontro de casais hoje. Que benção compartilhar experiências e aprender mais sobre como construir um casamento baseado nos princípios de Deus. "O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha." 1 Coríntios 13:4 ❤️',
     likes: 72,
-    comments: 15,
     timestamp: '1d atrás',
   },
 ];
 
 export default function CommunityScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [newPostCaption, setNewPostCaption] = useState('');
 
   const handleNewPost = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -62,6 +60,12 @@ export default function CommunityScreen() {
     if (!result.canceled) {
       // Here you would handle the new post creation
       console.log('New post image:', result.assets[0].uri);
+    }
+  };
+
+  const handleCaptionChange = (text: string) => {
+    if (text.length <= 1000) {
+      setNewPostCaption(text);
     }
   };
 
@@ -80,14 +84,9 @@ export default function CommunityScreen() {
       <Image source={{ uri: item.image }} style={styles.postImage} />
 
       <View style={styles.postActions}>
-        <View style={styles.leftActions}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Heart size={24} color={Theme.colors.text.dark} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <MessageSquare size={24} color={Theme.colors.text.dark} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.actionButton}>
+          <Heart size={24} color={Theme.colors.text.dark} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.postInfo}>
@@ -96,11 +95,6 @@ export default function CommunityScreen() {
           <Text style={styles.captionName}>{item.user.name}</Text>
           <Text style={styles.caption}>{item.caption}</Text>
         </View>
-        <TouchableOpacity>
-          <Text style={styles.commentsCount}>
-            Ver {item.comments} comentários
-          </Text>
-        </TouchableOpacity>
         <Text style={styles.timestamp}>{item.timestamp}</Text>
       </View>
     </View>
@@ -227,11 +221,7 @@ const styles = StyleSheet.create({
   },
   postActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     padding: Theme.spacing.md,
-  },
-  leftActions: {
-    flexDirection: 'row',
   },
   actionButton: {
     marginRight: Theme.spacing.md,
@@ -262,12 +252,6 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.text.dark,
     flex: 1,
-  },
-  commentsCount: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-    marginBottom: Theme.spacing.xs,
   },
   timestamp: {
     fontFamily: Theme.typography.fontFamily.body,
