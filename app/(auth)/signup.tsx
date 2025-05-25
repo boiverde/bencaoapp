@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler, Users, GraduationCap, Zodiac, BookOpen } from 'lucide-react-native';
+import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler, Users, GraduationCap, Radiation as Zodiac, BookOpen } from 'lucide-react-native';
 import DenominationModal from '@/components/UI/DenominationModal';
 import LocationModal from '@/components/UI/LocationModal';
 import PhotoUpload from '@/components/UI/PhotoUpload';
