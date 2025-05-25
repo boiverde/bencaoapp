@@ -16,6 +16,7 @@ export default function SignupScreen() {
   const [selectedDenomination, setSelectedDenomination] = useState<string>();
   const [selectedLocation, setSelectedLocation] = useState<{ state?: string; city?: string }>({});
   const [photo, setPhoto] = useState<string>();
+  const [aboutMe, setAboutMe] = useState('');
 
   const handleSelectPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -27,6 +28,12 @@ export default function SignupScreen() {
 
     if (!result.canceled) {
       setPhoto(result.assets[0].uri);
+    }
+  };
+
+  const handleAboutMeChange = (text: string) => {
+    if (text.length <= 500) {
+      setAboutMe(text);
     }
   };
 
@@ -135,6 +142,22 @@ export default function SignupScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
             />
+          </View>
+
+          <View style={styles.aboutMeContainer}>
+            <Text style={styles.aboutMeTitle}>Sobre mim</Text>
+            <TextInput
+              style={styles.aboutMeInput}
+              placeholder="Conte um pouco sobre você, seus interesses e o que busca em um relacionamento..."
+              placeholderTextColor={Theme.colors.text.medium}
+              multiline
+              textAlignVertical="top"
+              value={aboutMe}
+              onChangeText={handleAboutMeChange}
+            />
+            <Text style={styles.characterCount}>
+              {aboutMe.length}/500 caracteres
+            </Text>
           </View>
           
           <TouchableOpacity style={styles.signupButton}>
@@ -267,6 +290,31 @@ const styles = StyleSheet.create({
   },
   selectedText: {
     color: Theme.colors.text.dark,
+  },
+  aboutMeContainer: {
+    marginBottom: Theme.spacing.md,
+  },
+  aboutMeTitle: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+    marginBottom: Theme.spacing.sm,
+  },
+  aboutMeInput: {
+    backgroundColor: Theme.colors.background.light,
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    height: 120,
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+  },
+  characterCount: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.medium,
+    textAlign: 'right',
+    marginTop: Theme.spacing.xs,
   },
   signupButton: {
     flexDirection: 'row',
