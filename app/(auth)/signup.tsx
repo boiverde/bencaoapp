@@ -6,10 +6,26 @@ import Theme from '@/constants/Theme';
 import { Link } from 'expo-router';
 import { Mail, Lock, User, Calendar, ChevronRight, Church } from 'lucide-react-native';
 import DenominationModal from '@/components/UI/DenominationModal';
+import PhotoUpload from '@/components/UI/PhotoUpload';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function SignupScreen() {
   const [denominationModalVisible, setDenominationModalVisible] = useState(false);
   const [selectedDenomination, setSelectedDenomination] = useState<string>();
+  const [photo, setPhoto] = useState<string>();
+
+  const handleSelectPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setPhoto(result.assets[0].uri);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -30,6 +46,8 @@ export default function SignupScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Criar Conta</Text>
           <Text style={styles.cardSubtitle}>Preencha seus dados para começar</Text>
+          
+          <PhotoUpload photo={photo} onPress={handleSelectPhoto} />
           
           <View style={styles.inputContainer}>
             <User size={20} color={Theme.colors.text.medium} />
