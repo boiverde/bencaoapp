@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, CreditCard, Check, Clock, AlertTriangle, Info } from 'lucide-react-native';
+import { ChevronLeft, CreditCard, Check, Clock, TriangleAlert as AlertTriangle, Info } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useMonetization } from '@/hooks/useMonetization';
 
