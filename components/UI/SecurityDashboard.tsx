@@ -1,22 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Shield, 
-  ShieldCheck, 
-  AlertTriangle, 
-  Lock, 
-  Eye, 
-  Settings, 
-  Award,
-  TrendingUp,
-  CheckCircle,
-  XCircle,
-  Star,
-  Users,
-  Bell,
-  Smartphone
-} from 'lucide-react-native';
+import { Shield, ShieldCheck, TriangleAlert as AlertTriangle, Lock, Eye, Settings, Award, TrendingUp, CircleCheck as CheckCircle, Circle as XCircle, Star, Users, Bell, Smartphone } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useSecurity } from '@/hooks/useSecurity';
 import SecurityScoreCard from './SecurityScoreCard';
