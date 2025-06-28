@@ -3,11 +3,14 @@ import { StyleSheet, View, Text, Image, Animated, PanResponder } from 'react-nat
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Heart, X, MapPin, Globe, Church, Star } from 'lucide-react-native';
+import { Heart, X, MapPin, Globe, Church, Star, Trophy, Target } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import NotificationBell from '@/components/UI/NotificationBell';
 import NotificationModal from '@/components/UI/NotificationModal';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useGamification } from '@/hooks/useGamification';
+import CompatibilityDisplay from '@/components/UI/CompatibilityDisplay';
+import { CompatibilityAlgorithm, UserProfile } from '@/utils/compatibilityAlgorithm';
 
 // Mock data
 const PROFILES = [
@@ -16,30 +19,164 @@ const PROFILES = [
     name: 'Mariana',
     age: 28,
     denomination: 'Batista',
-    distance: 5,
-    location: 'São Paulo',
+    location: {
+      state: 'São Paulo',
+      city: 'São Paulo',
+      coordinates: { latitude: -23.5505, longitude: -46.6333 }
+    },
     languages: ['Português', 'Inglês'],
+    interests: ['Música', 'Viagens', 'Leitura', 'Ensino', 'Evangelismo'],
+    education: 'Graduação',
+    churchFrequency: 2,
+    children: 0,
+    height: 165,
+    zodiacSign: 'Virgem',
+    favoriteWorship: 'Deus é Deus - Delino Marçal',
+    aboutMe: 'Amo música, viagens e servir ao Senhor. Sou professora, gosto de ler e estou em busca de alguém que compartilhe da mesma fé e valores.',
     verse: 'O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha. 1 Coríntios 13:4',
     image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    photos: ['https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg'],
+    preferences: {
+      ageRange: [25, 35] as [number, number],
+      maxDistance: 50,
+      denominations: ['Batista', 'Presbiteriana'],
+      education: ['Graduação', 'Pós-graduação'],
+      children: 'no-preference',
+      languages: ['Português']
+    },
+    personality: {
+      extroversion: 7,
+      agreeableness: 8,
+      conscientiousness: 9,
+      spirituality: 9,
+      familyOriented: 8
+    },
+    values: {
+      marriageImportance: 9,
+      familyImportance: 9,
+      careerImportance: 7,
+      faithImportance: 10,
+      communityImportance: 8
+    },
+    lifestyle: {
+      smokingTolerance: 'never' as const,
+      drinkingTolerance: 'socially' as const,
+      exerciseFrequency: 3,
+      socialLevel: 6
+    }
   },
   {
     id: '2',
     name: 'João',
     age: 30,
     denomination: 'Católico',
-    distance: 8,
-    location: 'Rio de Janeiro',
+    location: {
+      state: 'Rio de Janeiro',
+      city: 'Rio de Janeiro',
+      coordinates: { latitude: -22.9068, longitude: -43.1729 }
+    },
     languages: ['Português', 'Espanhol'],
+    interests: ['Música', 'Esportes', 'Evangelismo', 'Voluntariado'],
+    education: 'Pós-graduação',
+    churchFrequency: 2,
+    children: 0,
+    height: 180,
+    zodiacSign: 'Leão',
+    favoriteWorship: 'Reckless Love - Cory Asbury',
+    aboutMe: 'Engenheiro apaixonado por servir a Deus e ajudar o próximo.',
     verse: 'Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna. João 3:16',
     image: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-  },
+    photos: ['https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'],
+    preferences: {
+      ageRange: [24, 32] as [number, number],
+      maxDistance: 100,
+      denominations: ['Batista', 'Presbiteriana'],
+      education: ['Graduação', 'Pós-graduação'],
+      children: 'no-preference',
+      languages: ['Português']
+    },
+    personality: {
+      extroversion: 6,
+      agreeableness: 9,
+      conscientiousness: 8,
+      spirituality: 9,
+      familyOriented: 9
+    },
+    values: {
+      marriageImportance: 9,
+      familyImportance: 10,
+      careerImportance: 8,
+      faithImportance: 10,
+      communityImportance: 9
+    },
+    lifestyle: {
+      smokingTolerance: 'never' as const,
+      drinkingTolerance: 'never' as const,
+      exerciseFrequency: 4,
+      socialLevel: 7
+    }
+  }
 ];
+
+// Mock current user for compatibility calculation
+const CURRENT_USER: UserProfile = {
+  id: 'current-user',
+  name: 'Ana Clara',
+  age: 27,
+  denomination: 'Batista',
+  location: {
+    state: 'São Paulo',
+    city: 'São Paulo',
+    coordinates: { latitude: -23.5505, longitude: -46.6333 }
+  },
+  languages: ['Português', 'Inglês'],
+  interests: ['Música', 'Viagens', 'Leitura', 'Ensino', 'Evangelismo'],
+  education: 'Graduação',
+  churchFrequency: 2,
+  children: 0,
+  height: 165,
+  zodiacSign: 'Virgem',
+  favoriteWorship: 'Deus é Deus - Delino Marçal',
+  aboutMe: 'Amo música, viagens e servir ao Senhor. Sou professora, gosto de ler e estou em busca de alguém que compartilhe da mesma fé e valores.',
+  verse: 'Mas buscai primeiro o Reino de Deus, e a sua justiça, e todas as coisas vos serão acrescentadas. Mateus 6:33',
+  photos: ['https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg'],
+  preferences: {
+    ageRange: [25, 35],
+    maxDistance: 50,
+    denominations: ['Batista', 'Presbiteriana'],
+    education: ['Graduação', 'Pós-graduação'],
+    children: 'no-preference',
+    languages: ['Português']
+  },
+  personality: {
+    extroversion: 7,
+    agreeableness: 8,
+    conscientiousness: 9,
+    spirituality: 9,
+    familyOriented: 8
+  },
+  values: {
+    marriageImportance: 9,
+    familyImportance: 9,
+    careerImportance: 7,
+    faithImportance: 10,
+    communityImportance: 8
+  },
+  lifestyle: {
+    smokingTolerance: 'never',
+    drinkingTolerance: 'socially',
+    exerciseFrequency: 3,
+    socialLevel: 6
+  }
+};
 
 export default function DiscoverScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  const [showCompatibility, setShowCompatibility] = useState(false);
   const swipe = useRef(new Animated.ValueXY()).current;
   const { sendMatchNotification } = useNotifications();
+  const { handleConnectionMade, userStats, getCurrentLevel } = useGamification();
   
   const rotation = swipe.x.interpolate({
     inputRange: [-100, 0, 100],
@@ -60,10 +197,11 @@ export default function DiscoverScreen() {
           toValue: { x: 500, y: gesture.dy },
           useNativeDriver: true,
         }).start(() => {
-          // Send match notification
+          // Send match notification and add gamification points
           const profile = PROFILES[currentIndex];
           if (profile) {
             sendMatchNotification(profile.name);
+            handleConnectionMade();
           }
           setCurrentIndex(prevIndex => prevIndex + 1);
           swipe.setValue({ x: 0, y: 0 });
@@ -91,10 +229,11 @@ export default function DiscoverScreen() {
       toValue: { x: 500, y: 0 },
       useNativeDriver: true,
     }).start(() => {
-      // Send match notification
+      // Send match notification and add gamification points
       const profile = PROFILES[currentIndex];
       if (profile) {
         sendMatchNotification(profile.name);
+        handleConnectionMade();
       }
       setCurrentIndex(prevIndex => prevIndex + 1);
       swipe.setValue({ x: 0, y: 0 });
@@ -123,10 +262,16 @@ export default function DiscoverScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Bênção Match</Text>
-          <NotificationBell 
-            onPress={() => setNotificationModalVisible(true)}
-            color={Theme.colors.primary.blue}
-          />
+          <View style={styles.headerRight}>
+            <View style={styles.levelBadge}>
+              <Trophy size={16} color={Theme.colors.primary.gold} />
+              <Text style={styles.levelText}>{getCurrentLevel().level}</Text>
+            </View>
+            <NotificationBell 
+              onPress={() => setNotificationModalVisible(true)}
+              color={Theme.colors.primary.blue}
+            />
+          </View>
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Não há mais perfis disponíveis.</Text>
@@ -141,16 +286,39 @@ export default function DiscoverScreen() {
   }
 
   const profile = PROFILES[currentIndex];
+  const compatibilityScore = CompatibilityAlgorithm.calculateCompatibility(CURRENT_USER, profile);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Bênção Match</Text>
-        <NotificationBell 
-          onPress={() => setNotificationModalVisible(true)}
-          color={Theme.colors.primary.blue}
-        />
+        <View style={styles.headerRight}>
+          <TouchableOpacity 
+            style={styles.pointsBadge}
+            onPress={() => setShowCompatibility(!showCompatibility)}
+          >
+            <Target size={16} color={Theme.colors.primary.blue} />
+            <Text style={styles.pointsText}>{compatibilityScore.overall}%</Text>
+          </TouchableOpacity>
+          <View style={styles.levelBadge}>
+            <Trophy size={16} color={Theme.colors.primary.gold} />
+            <Text style={styles.levelText}>{getCurrentLevel().level}</Text>
+          </View>
+          <NotificationBell 
+            onPress={() => setNotificationModalVisible(true)}
+            color={Theme.colors.primary.blue}
+          />
+        </View>
       </View>
+
+      {showCompatibility && (
+        <View style={styles.compatibilityContainer}>
+          <CompatibilityDisplay 
+            score={compatibilityScore} 
+            compact 
+          />
+        </View>
+      )}
       
       <View style={styles.cardContainer}>
         <Animated.View
@@ -182,7 +350,7 @@ export default function DiscoverScreen() {
               <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
                   <MapPin size={16} color={Theme.colors.text.light} />
-                  <Text style={styles.infoText}>{profile.distance} km • {profile.location}</Text>
+                  <Text style={styles.infoText}>{profile.location.city}, {profile.location.state}</Text>
                 </View>
                 <View style={styles.infoItem}>
                   <Globe size={16} color={Theme.colors.text.light} />
@@ -232,6 +400,46 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xxl,
     color: Theme.colors.primary.blue,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pointsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.background.white,
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.md,
+    marginRight: Theme.spacing.sm,
+    ...Theme.shadows.small,
+  },
+  pointsText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.primary.blue,
+    marginLeft: Theme.spacing.xs,
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.background.white,
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.md,
+    marginRight: Theme.spacing.sm,
+    ...Theme.shadows.small,
+  },
+  levelText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.primary.gold,
+    marginLeft: Theme.spacing.xs,
+  },
+  compatibilityContainer: {
+    marginHorizontal: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
   },
   cardContainer: {
     flex: 1,

@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin } from 'lucide-react-native';
+import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useGamification } from '@/hooks/useGamification';
+import LevelProgressCard from '@/components/UI/LevelProgressCard';
+import AchievementCard from '@/components/UI/AchievementCard';
+import ChallengeCard from '@/components/UI/ChallengeCard';
 
 // Mock user data
 const USER = {
@@ -22,14 +27,143 @@ const USER = {
     'https://images.pexels.com/photos/1181673/pexels-photo-1181673.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
   ],
   interests: ['Música', 'Viagens', 'Leitura', 'Ensino', 'Evangelismo', 'Voluntariado'],
-  stats: {
-    matches: 15,
-    likes: 32,
-    prayers: 8,
-  }
 };
 
 export default function ProfileScreen() {
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges'>('overview');
+  const {
+    userStats,
+    getCurrentLevel,
+    nextLevel,
+    levelProgress,
+    getUnlockedAchievements,
+    getLockedAchievements,
+    activeChallenge,
+    dailyChallenge
+  } = useGamification();
+
+  const currentLevel = getCurrentLevel();
+  const unlockedAchievements = getUnlockedAchievements();
+  const lockedAchievements = getLockedAchievements();
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <View>
+            <LevelProgressCard
+              currentLevel={currentLevel}
+              nextLevel={nextLevel}
+              progress={levelProgress}
+              totalPoints={userStats.totalPoints}
+            />
+            
+            <View style={styles.statsGrid}>
+              <View style={styles.statCard}>
+                <Trophy size={24} color={Theme.colors.primary.gold} />
+                <Text style={styles.statNumber}>{userStats.totalPoints}</Text>
+                <Text style={styles.statLabel}>Pontos</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Target size={24} color={Theme.colors.primary.blue} />
+                <Text style={styles.statNumber}>{unlockedAchievements.length}</Text>
+                <Text style={styles.statLabel}>Conquistas</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Zap size={24} color={Theme.colors.primary.pink} />
+                <Text style={styles.statNumber}>{userStats.challengesCompleted}</Text>
+                <Text style={styles.statLabel}>Desafios</Text>
+              </View>
+            </View>
+
+            <View style={styles.streaksSection}>
+              <Text style={styles.sectionTitle}>Sequências Ativas</Text>
+              <View style={styles.streaksGrid}>
+                <View style={styles.streakCard}>
+                  <Text style={styles.streakNumber}>{userStats.streaks.prayer}</Text>
+                  <Text style={styles.streakLabel}>Dias de Oração</Text>
+                </View>
+                <View style={styles.streakCard}>
+                  <Text style={styles.streakNumber}>{userStats.streaks.reading}</Text>
+                  <Text style={styles.streakLabel}>Dias de Leitura</Text>
+                </View>
+                <View style={styles.streakCard}>
+                  <Text style={styles.streakNumber}>{userStats.streaks.community}</Text>
+                  <Text style={styles.streakLabel}>Dias Comunitários</Text>
+                </View>
+              </View>
+            </View>
+
+            {unlockedAchievements.length > 0 && (
+              <View style={styles.recentAchievements}>
+                <Text style={styles.sectionTitle}>Conquistas Recentes</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {unlockedAchievements.slice(0, 3).map(achievement => (
+                    <AchievementCard
+                      key={achievement.id}
+                      achievement={achievement}
+                      compact
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+        );
+
+      case 'achievements':
+        return (
+          <View>
+            {unlockedAchievements.length > 0 && (
+              <View style={styles.achievementsSection}>
+                <Text style={styles.sectionTitle}>Desbloqueadas ({unlockedAchievements.length})</Text>
+                {unlockedAchievements.map(achievement => (
+                  <AchievementCard
+                    key={achievement.id}
+                    achievement={achievement}
+                  />
+                ))}
+              </View>
+            )}
+
+            {lockedAchievements.length > 0 && (
+              <View style={styles.achievementsSection}>
+                <Text style={styles.sectionTitle}>Bloqueadas ({lockedAchievements.length})</Text>
+                {lockedAchievements.slice(0, 5).map(achievement => (
+                  <AchievementCard
+                    key={achievement.id}
+                    achievement={achievement}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        );
+
+      case 'challenges':
+        return (
+          <View>
+            {dailyChallenge && (
+              <View style={styles.challengesSection}>
+                <Text style={styles.sectionTitle}>Desafio Diário</Text>
+                <ChallengeCard challenge={dailyChallenge} />
+              </View>
+            )}
+
+            {activeChallenge && (
+              <View style={styles.challengesSection}>
+                <Text style={styles.sectionTitle}>Desafio Ativo</Text>
+                <ChallengeCard challenge={activeChallenge} />
+              </View>
+            )}
+          </View>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -49,32 +183,54 @@ export default function ProfileScreen() {
               <TouchableOpacity style={styles.editButton}>
                 <Edit size={16} color="#fff" />
               </TouchableOpacity>
+              
+              {/* Level Badge */}
+              <View style={[styles.levelBadge, { backgroundColor: currentLevel.color }]}>
+                <Text style={styles.levelBadgeText}>{currentLevel.level}</Text>
+              </View>
             </View>
+            
             <Text style={styles.profileName}>{USER.name}, {USER.age}</Text>
+            <Text style={styles.profileTitle}>{userStats.currentTitle}</Text>
+            
             <View style={styles.locationContainer}>
               <MapPin size={16} color={Theme.colors.text.medium} />
               <Text style={styles.locationText}>{USER.location}</Text>
             </View>
           </View>
-          
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{USER.stats.matches}</Text>
-              <Text style={styles.statLabel}>Conexões</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{USER.stats.likes}</Text>
-              <Text style={styles.statLabel}>Curtidas</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{USER.stats.prayers}</Text>
-              <Text style={styles.statLabel}>Orações</Text>
-            </View>
-          </View>
         </View>
-        
+
+        {/* Gamification Tabs */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'overview' && styles.activeTab]}
+            onPress={() => setActiveTab('overview')}
+          >
+            <Text style={[styles.tabText, activeTab === 'overview' && styles.activeTabText]}>
+              Visão Geral
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'achievements' && styles.activeTab]}
+            onPress={() => setActiveTab('achievements')}
+          >
+            <Text style={[styles.tabText, activeTab === 'achievements' && styles.activeTabText]}>
+              Conquistas
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'challenges' && styles.activeTab]}
+            onPress={() => setActiveTab('challenges')}
+          >
+            <Text style={[styles.tabText, activeTab === 'challenges' && styles.activeTabText]}>
+              Desafios
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {renderTabContent()}
+
+        {/* Original Profile Sections */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informações Religiosas</Text>
           <View style={styles.infoRow}>
@@ -178,6 +334,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: Theme.borderRadius.circle,
     marginBottom: Theme.spacing.md,
+    position: 'relative',
   },
   profileImage: {
     width: '100%',
@@ -199,10 +356,33 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Theme.colors.background.white,
   },
+  levelBadge: {
+    position: 'absolute',
+    top: -5,
+    left: -5,
+    width: 28,
+    height: 28,
+    borderRadius: Theme.borderRadius.circle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Theme.colors.background.white,
+  },
+  levelBadgeText: {
+    fontFamily: Theme.typography.fontFamily.heading,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.background.white,
+  },
   profileName: {
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xl,
     color: Theme.colors.text.dark,
+    marginBottom: Theme.spacing.xs,
+  },
+  profileTitle: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.primary.blue,
     marginBottom: Theme.spacing.xs,
   },
   locationContainer: {
@@ -215,30 +395,99 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.medium,
     marginLeft: Theme.spacing.xs,
   },
-  statsContainer: {
+  tabsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: Theme.spacing.md,
-    marginTop: Theme.spacing.md,
+    backgroundColor: Theme.colors.background.white,
+    marginHorizontal: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.md,
+    marginBottom: Theme.spacing.md,
+    ...Theme.shadows.small,
   },
-  statItem: {
+  tab: {
+    flex: 1,
+    paddingVertical: Theme.spacing.md,
     alignItems: 'center',
+    borderRadius: Theme.borderRadius.md,
+  },
+  activeTab: {
+    backgroundColor: Theme.colors.primary.blue,
+  },
+  tabText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.medium,
+  },
+  activeTabText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    color: Theme.colors.background.white,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    marginHorizontal: Theme.spacing.md,
+    marginBottom: Theme.spacing.lg,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Theme.colors.background.white,
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    alignItems: 'center',
+    marginHorizontal: Theme.spacing.xs,
+    ...Theme.shadows.small,
   },
   statNumber: {
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xl,
-    color: Theme.colors.primary.blue,
+    color: Theme.colors.text.dark,
+    marginVertical: Theme.spacing.xs,
   },
   statLabel: {
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.sm,
     color: Theme.colors.text.medium,
   },
-  statDivider: {
-    width: 1,
-    height: '70%',
-    backgroundColor: Theme.colors.ui.border,
-    alignSelf: 'center',
+  streaksSection: {
+    marginBottom: Theme.spacing.lg,
+  },
+  sectionTitle: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.lg,
+    color: Theme.colors.text.dark,
+    marginHorizontal: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
+  },
+  streaksGrid: {
+    flexDirection: 'row',
+    marginHorizontal: Theme.spacing.md,
+  },
+  streakCard: {
+    flex: 1,
+    backgroundColor: Theme.colors.background.white,
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    alignItems: 'center',
+    marginHorizontal: Theme.spacing.xs,
+    ...Theme.shadows.small,
+  },
+  streakNumber: {
+    fontFamily: Theme.typography.fontFamily.heading,
+    fontSize: Theme.typography.fontSize.xxl,
+    color: Theme.colors.primary.blue,
+  },
+  streakLabel: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.xs,
+    color: Theme.colors.text.medium,
+    textAlign: 'center',
+  },
+  recentAchievements: {
+    marginBottom: Theme.spacing.lg,
+  },
+  achievementsSection: {
+    marginBottom: Theme.spacing.lg,
+  },
+  challengesSection: {
+    marginBottom: Theme.spacing.lg,
   },
   section: {
     backgroundColor: Theme.colors.background.white,
@@ -247,12 +496,6 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.md,
     marginHorizontal: Theme.spacing.md,
     ...Theme.shadows.small,
-  },
-  sectionTitle: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.lg,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.md,
   },
   infoRow: {
     flexDirection: 'row',
