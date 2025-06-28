@@ -8,17 +8,7 @@ import {
   TextInput,
   Alert
 } from 'react-native';
-import { 
-  Heart, 
-  MessageSquare, 
-  Share2, 
-  HandHelping as PrayingHands, 
-  MoreVertical, 
-  Calendar, 
-  MapPin, 
-  Book,
-  User
-} from 'lucide-react-native';
+import { Heart, MessageSquare, Share2, HandHelping as PrayingHands, MoveVertical as MoreVertical, Calendar, MapPin, Book, User } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { SocialPost, SocialComment } from '@/utils/socialSystem';
 import { useSocial } from '@/hooks/useSocial';
