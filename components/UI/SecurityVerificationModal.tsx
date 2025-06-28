@@ -10,18 +10,7 @@ import {
   TextInput,
   Alert
 } from 'react-native';
-import { 
-  X, 
-  Upload, 
-  Camera, 
-  CheckCircle, 
-  Shield, 
-  User, 
-  Church, 
-  Users,
-  Award,
-  Info
-} from 'lucide-react-native';
+import { X, Upload, Camera, CircleCheck as CheckCircle, Shield, User, Church, Users, Award, Info } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useSecurity } from '@/hooks/useSecurity';
 import { VerificationRequest } from '@/utils/securitySystem';

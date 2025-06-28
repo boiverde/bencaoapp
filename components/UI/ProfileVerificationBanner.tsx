@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { Shield, ShieldCheck, Award, AlertCircle } from 'lucide-react-native';
+import { Shield, ShieldCheck, Award, CircleAlert as AlertCircle } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useSecurity } from '@/hooks/useSecurity';
 

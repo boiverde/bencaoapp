@@ -1,15 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { 
-  AlertTriangle, 
-  Shield, 
-  Info, 
-  CheckCircle, 
-  X, 
-  Smartphone, 
-  MapPin, 
-  Clock,
-  Eye
-} from 'lucide-react-native';
+import { TriangleAlert as AlertTriangle, Shield, Info, CircleCheck as CheckCircle, X, Smartphone, MapPin, Clock, Eye } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { SecurityAlert } from '@/utils/securitySystem';
 import { useSecurity } from '@/hooks/useSecurity';

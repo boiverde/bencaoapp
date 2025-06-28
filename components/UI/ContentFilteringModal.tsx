@@ -8,16 +8,7 @@ import {
   ScrollView,
   Switch
 } from 'react-native';
-import { 
-  X, 
-  Shield, 
-  MessageSquare, 
-  Eye, 
-  AlertTriangle, 
-  Book,
-  Church,
-  Heart
-} from 'lucide-react-native';
+import { X, Shield, MessageSquare, Eye, TriangleAlert as AlertTriangle, Book, Church, Heart } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useSecurity } from '@/hooks/useSecurity';
 

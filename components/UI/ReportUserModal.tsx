@@ -10,17 +10,7 @@ import {
   Image,
   Alert
 } from 'react-native';
-import { 
-  X, 
-  AlertTriangle, 
-  Upload, 
-  Camera, 
-  CheckCircle, 
-  Shield,
-  MessageSquare,
-  User,
-  Church
-} from 'lucide-react-native';
+import { X, TriangleAlert as AlertTriangle, Upload, Camera, CircleCheck as CheckCircle, Shield, MessageSquare, User, Church } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useSecurity } from '@/hooks/useSecurity';
 import { SecurityReport } from '@/utils/securitySystem';
