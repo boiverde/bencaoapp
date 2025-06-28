@@ -1,18 +1,5 @@
 import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
-import { 
-  User, 
-  MapPin, 
-  Church, 
-  Book, 
-  Heart, 
-  Users, 
-  Calendar, 
-  Edit, 
-  UserPlus, 
-  UserMinus, 
-  MessageSquare, 
-  Shield 
-} from 'lucide-react-native';
+import { User, MapPin, Church, Book, Heart, Users, Calendar, CreditCard as Edit, UserPlus, UserMinus, MessageSquare, Shield } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { SocialProfile } from '@/utils/socialSystem';
 
