@@ -42,6 +42,8 @@ export default function ChatScreen() {
   
   const flatListRef = useRef<FlatList>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const responseTimeoutRef = useRef<NodeJS.Timeout>();
+  const isMountedRef = useRef(true);
   
   const { sendMessageNotification } = useNotifications();
   const {
@@ -67,11 +69,30 @@ export default function ChatScreen() {
   const messages = getConversationMessages(conversationId);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+      // Clear all timeouts on unmount
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (responseTimeoutRef.current) {
+        clearTimeout(responseTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     // Scroll to bottom when new messages arrive
     if (messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
+      const scrollTimeout = setTimeout(() => {
+        if (isMountedRef.current) {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }
       }, 100);
+      
+      return () => clearTimeout(scrollTimeout);
     }
   }, [messages.length]);
 
@@ -79,26 +100,35 @@ export default function ChatScreen() {
     if (messageText.trim()) {
       const content = messageText.trim();
       setMessageText('');
-      stopTyping(conversationId);
+      
+      if (isMountedRef.current) {
+        stopTyping(conversationId);
+      }
       
       try {
         await sendMessage(conversationId, content);
         
         // Simulate receiving a response
-        setTimeout(() => {
-          const intent = CommunicationSystem.detectMessageIntent(content);
-          if (intent.suggestedResponse) {
-            sendMessage(conversationId, intent.suggestedResponse);
-            sendMessageNotification('Mariana', intent.suggestedResponse);
+        responseTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) {
+            const intent = CommunicationSystem.detectMessageIntent(content);
+            if (intent.suggestedResponse) {
+              sendMessage(conversationId, intent.suggestedResponse);
+              sendMessageNotification('Mariana', intent.suggestedResponse);
+            }
           }
         }, 2000);
       } catch (error) {
-        Alert.alert('Erro', 'Não foi possível enviar a mensagem. Tente novamente.');
+        if (isMountedRef.current) {
+          Alert.alert('Erro', 'Não foi possível enviar a mensagem. Tente novamente.');
+        }
       }
     }
   };
 
   const handleTextChange = (text: string) => {
+    if (!isMountedRef.current) return;
+    
     setMessageText(text);
     
     if (text.length > 0 && !isTyping) {
@@ -113,17 +143,23 @@ export default function ChatScreen() {
     
     // Set new timeout
     typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-      stopTyping(conversationId);
+      if (isMountedRef.current) {
+        setIsTyping(false);
+        stopTyping(conversationId);
+      }
     }, 1000);
   };
 
   const handleSendVerse = async (category?: string) => {
     try {
       await sendVerse(conversationId, category);
-      setShowSpiritualOptions(false);
+      if (isMountedRef.current) {
+        setShowSpiritualOptions(false);
+      }
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível enviar o versículo.');
+      if (isMountedRef.current) {
+        Alert.alert('Erro', 'Não foi possível enviar o versículo.');
+      }
     }
   };
 
@@ -136,7 +172,7 @@ export default function ChatScreen() {
         {
           text: 'Enviar',
           onPress: async (description) => {
-            if (description && description.trim()) {
+            if (description && description.trim() && isMountedRef.current) {
               try {
                 const request = createPrayerRequest(
                   'Pedido de Oração',
@@ -151,9 +187,13 @@ export default function ChatScreen() {
                   { prayerCategory: 'personal' }
                 );
                 
-                setShowSpiritualOptions(false);
+                if (isMountedRef.current) {
+                  setShowSpiritualOptions(false);
+                }
               } catch (error) {
-                Alert.alert('Erro', 'Não foi possível enviar o pedido de oração.');
+                if (isMountedRef.current) {
+                  Alert.alert('Erro', 'Não foi possível enviar o pedido de oração.');
+                }
               }
             }
           }

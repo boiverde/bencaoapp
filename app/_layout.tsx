@@ -14,6 +14,7 @@ import {
 } from '@expo-google-fonts/open-sans';
 import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
 import { SplashScreen } from 'expo-router';
+import Theme from '@/constants/Theme';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
