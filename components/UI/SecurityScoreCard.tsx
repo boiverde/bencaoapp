@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Shield, TrendingUp, Award, AlertTriangle } from 'lucide-react-native';
+import { Shield, TrendingUp, Award, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { SecurityProfile } from '@/utils/securitySystem';
 

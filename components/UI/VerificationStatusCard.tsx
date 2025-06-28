@@ -1,17 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Mail, 
-  Phone, 
-  User, 
-  Church, 
-  Users, 
-  Shield,
-  Award,
-  ChevronRight
-} from 'lucide-react-native';
+import { CircleCheck as CheckCircle, Circle as XCircle, Clock, Mail, Phone, User, Church, Users, Shield, Award, ChevronRight } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { SecurityProfile } from '@/utils/securitySystem';
 
