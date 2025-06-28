@@ -1,20 +1,16 @@
 import { useRef, useState } from 'react';
-import { StyleSheet, View, Text, Image, Animated, PanResponder, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, Animated, PanResponder } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Heart, X, MapPin, Globe, Church, Star, Trophy, Target, RotateCcw, Zap, Crown } from 'lucide-react-native';
-import { TouchableOpacity as GestureHandlerButton } from 'react-native-gesture-handler';
+import { Heart, X, MapPin, Globe, Church, Star, Trophy, Target } from 'lucide-react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import NotificationBell from '@/components/UI/NotificationBell';
 import NotificationModal from '@/components/UI/NotificationModal';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useGamification } from '@/hooks/useGamification';
-import { useMonetization } from '@/hooks/useMonetization';
 import CompatibilityDisplay from '@/components/UI/CompatibilityDisplay';
 import { CompatibilityAlgorithm, UserProfile } from '@/utils/compatibilityAlgorithm';
-import SubscriptionBanner from '@/components/Monetization/SubscriptionBanner';
-import PremiumFeatureModal from '@/components/Monetization/PremiumFeatureModal';
-import FeatureGate from '@/components/Monetization/FeatureGate';
 
 // Mock data
 const PROFILES = [
@@ -178,17 +174,9 @@ export default function DiscoverScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [notificationModalVisible, setNotificationModalVisible] = useState(false);
   const [showCompatibility, setShowCompatibility] = useState(false);
-  const [premiumFeatureModalVisible, setPremiumFeatureModalVisible] = useState(false);
-  const [premiumFeature, setPremiumFeature] = useState({
-    name: '',
-    description: '',
-    icon: ''
-  });
-  
   const swipe = useRef(new Animated.ValueXY()).current;
   const { sendMatchNotification } = useNotifications();
   const { handleConnectionMade, userStats, getCurrentLevel } = useGamification();
-  const { hasFeatureAccess, isSubscribed } = useMonetization();
   
   const rotation = swipe.x.interpolate({
     inputRange: [-100, 0, 100],
@@ -262,57 +250,11 @@ export default function DiscoverScreen() {
     });
   };
 
-  const handleRewind = () => {
-    if (currentIndex > 0) {
-      if (hasFeatureAccess('feature_rewind')) {
-        setCurrentIndex(prevIndex => prevIndex - 1);
-      } else {
-        setPremiumFeature({
-          name: 'Voltar Perfil',
-          description: 'Volte para perfis que você passou e tenha uma segunda chance de conexão.',
-          icon: 'rotate-ccw'
-        });
-        setPremiumFeatureModalVisible(true);
-      }
-    }
-  };
-
-  const handleSuperLike = () => {
-    if (hasFeatureAccess('feature_superlike')) {
-      // Implement super like functionality
-      const profile = PROFILES[currentIndex];
-      if (profile) {
-        sendMatchNotification(profile.name);
-        handleConnectionMade();
-      }
-      setCurrentIndex(prevIndex => prevIndex + 1);
-    } else {
-      setPremiumFeature({
-        name: 'Super Curtida',
-        description: 'Destaque-se com uma super curtida que mostra seu interesse especial.',
-        icon: 'star'
-      });
-      setPremiumFeatureModalVisible(true);
-    }
-  };
-
-  const handleBoost = () => {
-    if (hasFeatureAccess('feature_boost')) {
-      // Implement boost functionality
-      Alert.alert('Impulso Ativado', 'Seu perfil será destacado por 30 minutos!');
-    } else {
-      setPremiumFeature({
-        name: 'Impulso de Perfil',
-        description: 'Aumente sua visibilidade e receba até 10x mais visualizações por 30 minutos.',
-        icon: 'zap'
-      });
-      setPremiumFeatureModalVisible(true);
-    }
-  };
-
-  const handleSubscribe = () => {
-    // Navigate to subscription screen
-    navigation.navigate('Profile', { screen: 'subscription' });
+  const handleFollow = () => {
+    // Here you would implement the follow functionality
+    // For now, we'll just show a visual feedback
+    const profile = PROFILES[currentIndex];
+    console.log(`Following ${profile.name}`);
   };
 
   if (currentIndex >= PROFILES.length) {
@@ -331,9 +273,6 @@ export default function DiscoverScreen() {
             />
           </View>
         </View>
-        
-        <SubscriptionBanner onPress={handleSubscribe} />
-        
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Não há mais perfis disponíveis.</Text>
           <Text style={styles.emptySubtext}>Tente novamente mais tarde ou ajuste seus filtros.</Text>
@@ -371,13 +310,6 @@ export default function DiscoverScreen() {
           />
         </View>
       </View>
-
-      {!isSubscribed() && (
-        <SubscriptionBanner 
-          onPress={handleSubscribe}
-          compact={true}
-        />
-      )}
 
       {showCompatibility && (
         <View style={styles.compatibilityContainer}>
@@ -433,108 +365,20 @@ export default function DiscoverScreen() {
       </View>
       
       <View style={styles.actionsContainer}>
-        <FeatureGate
-          feature="feature_rewind"
-          onUpgrade={() => {
-            setPremiumFeature({
-              name: 'Voltar Perfil',
-              description: 'Volte para perfis que você passou e tenha uma segunda chance de conexão.',
-              icon: 'rotate-ccw'
-            });
-            setPremiumFeatureModalVisible(true);
-          }}
-          fallback={
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.rewindButton]} 
-              onPress={handleRewind}
-            >
-              <RotateCcw size={30} color="#fff" />
-            </TouchableOpacity>
-          }
-        >
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.rewindButton]} 
-            onPress={handleRewind}
-          >
-            <RotateCcw size={30} color="#fff" />
-          </TouchableOpacity>
-        </FeatureGate>
-
         <TouchableOpacity style={[styles.actionButton, styles.passButton]} onPress={handlePass}>
           <X size={30} color="#fff" />
         </TouchableOpacity>
-        
-        <FeatureGate
-          feature="feature_superlike"
-          onUpgrade={() => {
-            setPremiumFeature({
-              name: 'Super Curtida',
-              description: 'Destaque-se com uma super curtida que mostra seu interesse especial.',
-              icon: 'star'
-            });
-            setPremiumFeatureModalVisible(true);
-          }}
-          fallback={
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.superLikeButton]}
-              onPress={handleSuperLike}
-            >
-              <Star size={30} color="#fff" fill="#fff" />
-            </TouchableOpacity>
-          }
-        >
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.superLikeButton]}
-            onPress={handleSuperLike}
-          >
-            <Star size={30} color="#fff" fill="#fff" />
-          </TouchableOpacity>
-        </FeatureGate>
-
+        <TouchableOpacity style={[styles.actionButton, styles.followButton]} onPress={handleFollow}>
+          <Star size={30} color="#fff" fill="#fff" />
+        </TouchableOpacity>
         <TouchableOpacity style={[styles.actionButton, styles.likeButton]} onPress={handleLike}>
           <Heart size={30} color="#fff" fill="#fff" />
         </TouchableOpacity>
-        
-        <FeatureGate
-          feature="feature_boost"
-          onUpgrade={() => {
-            setPremiumFeature({
-              name: 'Impulso de Perfil',
-              description: 'Aumente sua visibilidade e receba até 10x mais visualizações por 30 minutos.',
-              icon: 'zap'
-            });
-            setPremiumFeatureModalVisible(true);
-          }}
-          fallback={
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.boostButton]}
-              onPress={handleBoost}
-            >
-              <Zap size={30} color="#fff" />
-            </TouchableOpacity>
-          }
-        >
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.boostButton]}
-            onPress={handleBoost}
-          >
-            <Zap size={30} color="#fff" />
-          </TouchableOpacity>
-        </FeatureGate>
       </View>
 
       <NotificationModal
         visible={notificationModalVisible}
         onClose={() => setNotificationModalVisible(false)}
-      />
-      
-      <PremiumFeatureModal
-        visible={premiumFeatureModalVisible}
-        onClose={() => setPremiumFeatureModalVisible(false)}
-        onSubscribe={handleSubscribe}
-        featureName={premiumFeature.name}
-        featureDescription={premiumFeature.description}
-        featureIcon={premiumFeature.icon}
       />
     </SafeAreaView>
   );
@@ -668,33 +512,28 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: Theme.spacing.lg,
     paddingHorizontal: Theme.spacing.md,
   },
   actionButton: {
-    width: 56,
-    height: 56,
+    width: 64,
+    height: 64,
     borderRadius: Theme.borderRadius.circle,
     justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: Theme.spacing.sm,
     ...Theme.shadows.small,
-  },
-  rewindButton: {
-    backgroundColor: Theme.colors.primary.lilac,
   },
   passButton: {
     backgroundColor: Theme.colors.status.error,
   },
-  superLikeButton: {
-    backgroundColor: Theme.colors.primary.blue,
+  followButton: {
+    backgroundColor: Theme.colors.primary.gold,
   },
   likeButton: {
     backgroundColor: Theme.colors.primary.pink,
-  },
-  boostButton: {
-    backgroundColor: Theme.colors.primary.gold,
   },
   emptyContainer: {
     flex: 1,
