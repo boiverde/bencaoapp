@@ -1,17 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
-import { 
-  HandHelping as PrayingHands, 
-  User, 
-  Users, 
-  Heart, 
-  Briefcase, 
-  Home, 
-  Globe,
-  Clock,
-  Check,
-  MoreVertical
-} from 'lucide-react-native';
+import { HandHelping as PrayingHands, User, Users, Heart, Briefcase, Chrome as Home, Globe, Clock, Check, MoveVertical as MoreVertical } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { PrayerRequest, SpiritualContentManager } from '@/utils/spiritualContent';
 
