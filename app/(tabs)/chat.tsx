@@ -1,133 +1,277 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, FlatList, Image, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState, useRef, useEffect } from 'react';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  FlatList, 
+  TextInput, 
+  KeyboardAvoidingView, 
+  Platform,
+  TouchableOpacity,
+  Alert
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Send, Book, HandHelping as PrayingHands } from 'lucide-react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { 
+  Send, 
+  Book, 
+  HandHelping as PrayingHands, 
+  Phone, 
+  Video, 
+  Smile,
+  Plus,
+  Mic,
+  Camera,
+  MapPin,
+  Languages
+} from 'lucide-react-native';
 import NotificationBell from '@/components/UI/NotificationBell';
 import NotificationModal from '@/components/UI/NotificationModal';
+import MessageBubble from '@/components/UI/MessageBubble';
+import VoiceCallModal from '@/components/UI/VoiceCallModal';
 import { useNotifications } from '@/hooks/useNotifications';
-
-// Mock data
-const MESSAGES = [
-  {
-    id: '1',
-    text: 'Olá! Vi que somos da mesma denominação. Que bom conhecer alguém que compartilha da mesma fé!',
-    sender: 'other',
-    timestamp: '10:30',
-  },
-  {
-    id: '2',
-    text: 'Oi Mariana! Sim, que benção encontrar alguém que compartilha dos mesmos valores!',
-    sender: 'self',
-    timestamp: '10:32',
-  },
-  {
-    id: '3',
-    text: 'Você frequenta alguma igreja específica?',
-    sender: 'other',
-    timestamp: '10:33',
-  },
-  {
-    id: '4',
-    text: 'Sim, frequento a Igreja Batista Central. E você?',
-    sender: 'self',
-    timestamp: '10:35',
-  },
-  {
-    id: '5',
-    text: 'Eu vou na Primeira Igreja Batista! Mas já visitei a Central algumas vezes, é muito boa!',
-    sender: 'other',
-    timestamp: '10:36',
-  },
-  {
-    id: '6',
-    type: 'verse',
-    text: '"Porque onde estiverem dois ou três reunidos em meu nome, ali estou no meio deles." Mateus 18:20',
-    sender: 'other',
-    timestamp: '10:38',
-  },
-];
-
-const CHAT_USER = {
-  name: 'Mariana',
-  age: 28,
-  image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-  online: true,
-  lastActive: 'Agora',
-};
+import { useCommunication } from '@/hooks/useCommunication';
+import { CommunicationSystem } from '@/utils/communicationSystem';
 
 export default function ChatScreen() {
   const [messageText, setMessageText] = useState('');
   const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  const [showSpiritualOptions, setShowSpiritualOptions] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  
+  const flatListRef = useRef<FlatList>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  
   const { sendMessageNotification } = useNotifications();
-  
-  const renderMessage = ({ item }) => {
-    const isVerse = item.type === 'verse';
-    
-    return (
-      <View style={[
-        styles.messageContainer,
-        item.sender === 'self' ? styles.selfMessageContainer : styles.otherMessageContainer
-      ]}>
-        {isVerse ? (
-          <View style={styles.verseBubble}>
-            <Book size={16} color={Theme.colors.primary.lilac} style={styles.verseIcon} />
-            <Text style={styles.verseText}>{item.text}</Text>
-            <Text style={styles.messageTime}>{item.timestamp}</Text>
-          </View>
-        ) : (
-          <View style={[
-            styles.messageBubble,
-            item.sender === 'self' ? styles.selfMessageBubble : styles.otherMessageBubble
-          ]}>
-            <Text style={[
-              styles.messageText,
-              item.sender === 'self' ? styles.selfMessageText : styles.otherMessageText
-            ]}>
-              {item.text}
-            </Text>
-            <Text style={[
-              styles.messageTime,
-              item.sender === 'self' ? styles.selfMessageTime : styles.otherMessageTime
-            ]}>
-              {item.timestamp}
-            </Text>
-          </View>
-        )}
-      </View>
-    );
-  };
-  
-  const handleSendMessage = () => {
-    if (messageText.trim()) {
-      // In a real app, this would send the message to the backend
-      // Simulate receiving a message notification
+  const {
+    sendMessage,
+    getConversationMessages,
+    addReaction,
+    editMessage,
+    deleteMessage,
+    translateMessage,
+    startVoiceCall,
+    endVoiceCall,
+    answerCall,
+    declineCall,
+    activeCall,
+    startTyping,
+    stopTyping,
+    sendVerse,
+    createPrayerRequest
+  } = useCommunication();
+
+  // Mock conversation ID
+  const conversationId = 'conv_1';
+  const messages = getConversationMessages(conversationId);
+
+  useEffect(() => {
+    // Scroll to bottom when new messages arrive
+    if (messages.length > 0) {
       setTimeout(() => {
-        sendMessageNotification(CHAT_USER.name, 'Obrigada pela mensagem! 😊');
-      }, 2000);
-      
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages.length]);
+
+  const handleSendMessage = async () => {
+    if (messageText.trim()) {
+      const content = messageText.trim();
       setMessageText('');
+      stopTyping(conversationId);
+      
+      try {
+        await sendMessage(conversationId, content);
+        
+        // Simulate receiving a response
+        setTimeout(() => {
+          const intent = CommunicationSystem.detectMessageIntent(content);
+          if (intent.suggestedResponse) {
+            sendMessage(conversationId, intent.suggestedResponse);
+            sendMessageNotification('Mariana', intent.suggestedResponse);
+          }
+        }, 2000);
+      } catch (error) {
+        Alert.alert('Erro', 'Não foi possível enviar a mensagem. Tente novamente.');
+      }
     }
   };
-  
+
+  const handleTextChange = (text: string) => {
+    setMessageText(text);
+    
+    if (text.length > 0 && !isTyping) {
+      setIsTyping(true);
+      startTyping(conversationId);
+    }
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Set new timeout
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      stopTyping(conversationId);
+    }, 1000);
+  };
+
+  const handleSendVerse = async (category?: string) => {
+    try {
+      await sendVerse(conversationId, category);
+      setShowSpiritualOptions(false);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível enviar o versículo.');
+    }
+  };
+
+  const handleCreatePrayerRequest = () => {
+    Alert.prompt(
+      'Pedido de Oração',
+      'Descreva seu pedido de oração:',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Enviar',
+          onPress: async (description) => {
+            if (description && description.trim()) {
+              try {
+                const request = createPrayerRequest(
+                  'Pedido de Oração',
+                  description.trim(),
+                  'personal'
+                );
+                
+                await sendMessage(
+                  conversationId, 
+                  description.trim(), 
+                  'prayer',
+                  { prayerCategory: 'personal' }
+                );
+                
+                setShowSpiritualOptions(false);
+              } catch (error) {
+                Alert.alert('Erro', 'Não foi possível enviar o pedido de oração.');
+              }
+            }
+          }
+        }
+      ],
+      'plain-text'
+    );
+  };
+
+  const handleVoiceCall = () => {
+    startVoiceCall(conversationId, 'voice');
+  };
+
+  const handleVideoCall = () => {
+    startVoiceCall(conversationId, 'video');
+  };
+
+  const handlePrayerCall = () => {
+    startVoiceCall(conversationId, 'voice', true);
+  };
+
+  const renderMessage = ({ item, index }) => {
+    const isOwn = item.senderId === 'current_user';
+    const showAvatar = !isOwn && (index === 0 || messages[index - 1]?.senderId !== item.senderId);
+    
+    return (
+      <MessageBubble
+        message={item}
+        isOwn={isOwn}
+        showAvatar={showAvatar}
+        onReaction={addReaction}
+        onEdit={editMessage}
+        onDelete={deleteMessage}
+        onTranslate={translateMessage}
+      />
+    );
+  };
+
+  const renderSpiritualOptions = () => (
+    <View style={styles.spiritualOptions}>
+      <TouchableOpacity style={styles.spiritualOption} onPress={() => handleSendVerse('comfort')}>
+        <Book size={20} color={Theme.colors.primary.lilac} />
+        <Text style={styles.spiritualOptionText}>Versículo de Conforto</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.spiritualOption} onPress={() => handleSendVerse('strength')}>
+        <Book size={20} color={Theme.colors.primary.blue} />
+        <Text style={styles.spiritualOptionText}>Versículo de Força</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.spiritualOption} onPress={() => handleSendVerse()}>
+        <Book size={20} color={Theme.colors.primary.pink} />
+        <Text style={styles.spiritualOptionText}>Versículo Aleatório</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.spiritualOption} onPress={handleCreatePrayerRequest}>
+        <PrayingHands size={20} color={Theme.colors.primary.gold} />
+        <Text style={styles.spiritualOptionText}>Pedido de Oração</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.spiritualOption} onPress={handlePrayerCall}>
+        <PrayingHands size={20} color={Theme.colors.primary.blue} />
+        <Text style={styles.spiritualOptionText}>Chamada de Oração</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderMoreOptions = () => (
+    <View style={styles.moreOptions}>
+      <TouchableOpacity style={styles.moreOption}>
+        <Camera size={20} color={Theme.colors.text.dark} />
+        <Text style={styles.moreOptionText}>Câmera</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.moreOption}>
+        <Mic size={20} color={Theme.colors.text.dark} />
+        <Text style={styles.moreOptionText}>Áudio</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.moreOption}>
+        <MapPin size={20} color={Theme.colors.text.dark} />
+        <Text style={styles.moreOptionText}>Localização</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.moreOption}>
+        <Smile size={20} color={Theme.colors.text.dark} />
+        <Text style={styles.moreOptionText}>Figurinhas</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.userInfo}>
           <View style={styles.avatarContainer}>
-            <Image source={{ uri: CHAT_USER.image }} style={styles.avatar} />
-            {CHAT_USER.online && <View style={styles.onlineIndicator} />}
+            <View style={styles.avatar} />
+            <View style={styles.onlineIndicator} />
           </View>
           <View>
-            <Text style={styles.userName}>{CHAT_USER.name}, {CHAT_USER.age}</Text>
-            <Text style={styles.userStatus}>{CHAT_USER.lastActive}</Text>
+            <Text style={styles.userName}>Mariana, 28</Text>
+            <Text style={styles.userStatus}>online</Text>
           </View>
         </View>
+        
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.prayButton}>
-            <PrayingHands size={20} color={Theme.colors.primary.blue} />
+          <TouchableOpacity style={styles.headerButton} onPress={handleVoiceCall}>
+            <Phone size={20} color={Theme.colors.primary.blue} />
           </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.headerButton} onPress={handleVideoCall}>
+            <Video size={20} color={Theme.colors.primary.blue} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.headerButton} onPress={handlePrayerCall}>
+            <PrayingHands size={20} color={Theme.colors.primary.gold} />
+          </TouchableOpacity>
+          
           <NotificationBell 
             onPress={() => setNotificationModalVisible(true)}
             color={Theme.colors.primary.blue}
@@ -136,12 +280,16 @@ export default function ChatScreen() {
       </View>
       
       <FlatList
-        data={MESSAGES}
+        ref={flatListRef}
+        data={messages}
         renderItem={renderMessage}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messagesList}
-        inverted={false}
+        showsVerticalScrollIndicator={false}
       />
+      
+      {showSpiritualOptions && renderSpiritualOptions()}
+      {showMoreOptions && renderMoreOptions()}
       
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -149,19 +297,38 @@ export default function ChatScreen() {
         style={styles.inputContainer}
       >
         <View style={styles.inputRow}>
-          <TouchableOpacity style={styles.specialButton}>
-            <Book size={20} color={Theme.colors.primary.blue} />
+          <TouchableOpacity 
+            style={styles.spiritualButton}
+            onPress={() => {
+              setShowSpiritualOptions(!showSpiritualOptions);
+              setShowMoreOptions(false);
+            }}
+          >
+            <Book size={20} color={Theme.colors.primary.lilac} />
           </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.moreButton}
+            onPress={() => {
+              setShowMoreOptions(!showMoreOptions);
+              setShowSpiritualOptions(false);
+            }}
+          >
+            <Plus size={20} color={Theme.colors.text.medium} />
+          </TouchableOpacity>
+          
           <View style={styles.textInputContainer}>
             <TextInput
               style={styles.input}
               placeholder="Mensagem..."
               placeholderTextColor={Theme.colors.text.medium}
               value={messageText}
-              onChangeText={setMessageText}
+              onChangeText={handleTextChange}
               multiline
+              maxLength={1000}
             />
           </View>
+          
           <TouchableOpacity 
             style={[
               styles.sendButton,
@@ -174,6 +341,14 @@ export default function ChatScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <VoiceCallModal
+        call={activeCall}
+        visible={!!activeCall}
+        onAnswer={answerCall}
+        onDecline={declineCall}
+        onEnd={endVoiceCall}
+      />
 
       <NotificationModal
         visible={notificationModalVisible}
@@ -207,11 +382,13 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: Theme.borderRadius.circle,
     marginRight: Theme.spacing.md,
+    position: 'relative',
   },
   avatar: {
     width: '100%',
     height: '100%',
     borderRadius: Theme.borderRadius.circle,
+    backgroundColor: Theme.colors.primary.pink,
   },
   onlineIndicator: {
     width: 12,
@@ -232,84 +409,61 @@ const styles = StyleSheet.create({
   userStatus: {
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
+    color: Theme.colors.status.success,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  prayButton: {
+  headerButton: {
     width: 40,
     height: 40,
     borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.background.lilac,
+    backgroundColor: Theme.colors.background.light,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: Theme.spacing.sm,
+    marginLeft: Theme.spacing.sm,
   },
   messagesList: {
     padding: Theme.spacing.md,
+    paddingBottom: Theme.spacing.xl,
   },
-  messageContainer: {
-    marginBottom: Theme.spacing.md,
-    maxWidth: '80%',
-  },
-  selfMessageContainer: {
-    alignSelf: 'flex-end',
-  },
-  otherMessageContainer: {
-    alignSelf: 'flex-start',
-  },
-  messageBubble: {
-    borderRadius: Theme.borderRadius.lg,
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-  },
-  selfMessageBubble: {
-    backgroundColor: Theme.colors.primary.blue,
-  },
-  otherMessageBubble: {
+  spiritualOptions: {
     backgroundColor: Theme.colors.background.white,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.ui.border,
+    paddingVertical: Theme.spacing.md,
   },
-  verseBubble: {
-    backgroundColor: Theme.colors.background.lilac,
-    borderRadius: Theme.borderRadius.lg,
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: Theme.colors.primary.lilac,
+  spiritualOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.lg,
+    paddingVertical: Theme.spacing.md,
   },
-  verseIcon: {
-    marginBottom: Theme.spacing.xs,
-  },
-  messageText: {
+  spiritualOptionText: {
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.md,
-    marginRight: Theme.spacing.lg,
-  },
-  selfMessageText: {
-    color: Theme.colors.background.white,
-  },
-  otherMessageText: {
     color: Theme.colors.text.dark,
+    marginLeft: Theme.spacing.md,
   },
-  verseText: {
-    fontFamily: Theme.typography.fontFamily.verse,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.xs,
+  moreOptions: {
+    backgroundColor: Theme.colors.background.white,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.ui.border,
+    paddingVertical: Theme.spacing.md,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
-  messageTime: {
+  moreOption: {
+    alignItems: 'center',
+    width: '25%',
+    paddingVertical: Theme.spacing.md,
+  },
+  moreOptionText: {
     fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.xs,
-    color: Theme.colors.text.light,
-    alignSelf: 'flex-end',
-  },
-  selfMessageTime: {
-    color: Theme.colors.background.white + 'AA',
-  },
-  otherMessageTime: {
-    color: Theme.colors.text.light,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.dark,
+    marginTop: Theme.spacing.xs,
   },
   inputContainer: {
     borderTopWidth: 1,
@@ -319,7 +473,25 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  spiritualButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Theme.borderRadius.circle,
+    backgroundColor: Theme.colors.background.lilac,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Theme.spacing.sm,
+  },
+  moreButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Theme.borderRadius.circle,
+    backgroundColor: Theme.colors.background.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Theme.spacing.sm,
   },
   textInputContainer: {
     flex: 1,
@@ -327,7 +499,7 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.md,
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: Platform.OS === 'ios' ? Theme.spacing.sm : 0,
-    marginHorizontal: Theme.spacing.sm,
+    marginRight: Theme.spacing.sm,
     maxHeight: 100,
   },
   input: {
@@ -335,14 +507,7 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.text.dark,
     maxHeight: 100,
-  },
-  specialButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.background.lilac,
-    alignItems: 'center',
-    justifyContent: 'center',
+    minHeight: 40,
   },
   sendButton: {
     width: 40,
