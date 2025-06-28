@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text } from 'react-native';
-import { LucideIcon } from 'lucide-react-native';
+import { Video as LucideIcon } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 
 interface ChartCardProps {

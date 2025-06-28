@@ -1,20 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  BarChart2, 
-  PieChart, 
-  TrendingUp, 
-  Heart, 
-  Book, 
-  MessageSquare, 
-  Users, 
-  ChevronLeft,
-  Calendar,
-  Clock,
-  Eye,
-  HandHelping as PrayingHands
-} from 'lucide-react-native';
+import { ChartBar as BarChart2, ChartPie as PieChart, TrendingUp, Heart, Book, MessageSquare, Users, ChevronLeft, Calendar, Clock, Eye, HandHelping as PrayingHands } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { AnalyticsDashboard as DashboardData } from '@/utils/analyticsSystem';
 import { useAnalytics } from '@/hooks/useAnalytics';
