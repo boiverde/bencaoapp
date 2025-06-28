@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap } from 'lucide-react-native';
+import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap, Shield } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGamification } from '@/hooks/useGamification';
+import { useSecurity } from '@/hooks/useSecurity';
 import LevelProgressCard from '@/components/UI/LevelProgressCard';
 import AchievementCard from '@/components/UI/AchievementCard';
 import ChallengeCard from '@/components/UI/ChallengeCard';
+import SecurityDashboard from '@/components/UI/SecurityDashboard';
 
 // Mock user data
 const USER = {
@@ -30,7 +32,7 @@ const USER = {
 };
 
 export default function ProfileScreen() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security'>('overview');
   const {
     userStats,
     getCurrentLevel,
@@ -42,9 +44,20 @@ export default function ProfileScreen() {
     dailyChallenge
   } = useGamification();
 
+  const {
+    getTrustScore,
+    getSafetyRating,
+    getVerificationLevel,
+    getVerificationBadge
+  } = useSecurity();
+
   const currentLevel = getCurrentLevel();
   const unlockedAchievements = getUnlockedAchievements();
   const lockedAchievements = getLockedAchievements();
+  const trustScore = getTrustScore();
+  const safetyRating = getSafetyRating();
+  const verificationLevel = getVerificationLevel();
+  const verificationBadge = getVerificationBadge();
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -73,6 +86,11 @@ export default function ProfileScreen() {
                 <Zap size={24} color={Theme.colors.primary.pink} />
                 <Text style={styles.statNumber}>{userStats.challengesCompleted}</Text>
                 <Text style={styles.statLabel}>Desafios</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Shield size={24} color={verificationBadge?.color || Theme.colors.text.medium} />
+                <Text style={styles.statNumber}>{trustScore}</Text>
+                <Text style={styles.statLabel}>Segurança</Text>
               </View>
             </View>
 
@@ -159,6 +177,9 @@ export default function ProfileScreen() {
           </View>
         );
 
+      case 'security':
+        return <SecurityDashboard />;
+
       default:
         return null;
     }
@@ -188,6 +209,13 @@ export default function ProfileScreen() {
               <View style={[styles.levelBadge, { backgroundColor: currentLevel.color }]}>
                 <Text style={styles.levelBadgeText}>{currentLevel.level}</Text>
               </View>
+              
+              {/* Verification Badge */}
+              {verificationBadge && (
+                <View style={[styles.verificationBadge, { backgroundColor: verificationBadge.color }]}>
+                  <Shield size={12} color={Theme.colors.background.white} />
+                </View>
+              )}
             </View>
             
             <Text style={styles.profileName}>{USER.name}, {USER.age}</Text>
@@ -226,73 +254,85 @@ export default function ProfileScreen() {
               Desafios
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'security' && styles.activeTab]}
+            onPress={() => setActiveTab('security')}
+          >
+            <Text style={[styles.tabText, activeTab === 'security' && styles.activeTabText]}>
+              Segurança
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {renderTabContent()}
 
         {/* Original Profile Sections */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informações Religiosas</Text>
-          <View style={styles.infoRow}>
-            <Church size={18} color={Theme.colors.primary.blue} />
-            <View>
-              <Text style={styles.infoLabel}>Denominação</Text>
-              <Text style={styles.infoValue}>{USER.denomination}</Text>
-            </View>
-          </View>
-          <View style={styles.infoRow}>
-            <MapPin size={18} color={Theme.colors.primary.blue} />
-            <View>
-              <Text style={styles.infoLabel}>Igreja</Text>
-              <Text style={styles.infoValue}>{USER.church}</Text>
-            </View>
-          </View>
-          <View style={styles.infoRow}>
-            <Globe size={18} color={Theme.colors.primary.blue} />
-            <View>
-              <Text style={styles.infoLabel}>Idiomas</Text>
-              <Text style={styles.infoValue}>{USER.languages.join(', ')}</Text>
-            </View>
-          </View>
-          <View style={styles.verseContainer}>
-            <Book size={18} color={Theme.colors.primary.lilac} />
-            <Text style={styles.verseText}>"{USER.verse}"</Text>
-          </View>
-        </View>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sobre Mim</Text>
-          <Text style={styles.bioText}>{USER.bio}</Text>
-        </View>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Minhas Fotos</Text>
-          <View style={styles.photosGrid}>
-            {USER.photos.map((photo, index) => (
-              <View key={index} style={styles.photoContainer}>
-                <Image source={{ uri: photo }} style={styles.photo} />
+        {activeTab !== 'security' && (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Informações Religiosas</Text>
+              <View style={styles.infoRow}>
+                <Church size={18} color={Theme.colors.primary.blue} />
+                <View>
+                  <Text style={styles.infoLabel}>Denominação</Text>
+                  <Text style={styles.infoValue}>{USER.denomination}</Text>
+                </View>
               </View>
-            ))}
-            <TouchableOpacity style={styles.addPhotoButton}>
-              <Text style={styles.addPhotoText}>+</Text>
+              <View style={styles.infoRow}>
+                <MapPin size={18} color={Theme.colors.primary.blue} />
+                <View>
+                  <Text style={styles.infoLabel}>Igreja</Text>
+                  <Text style={styles.infoValue}>{USER.church}</Text>
+                </View>
+              </View>
+              <View style={styles.infoRow}>
+                <Globe size={18} color={Theme.colors.primary.blue} />
+                <View>
+                  <Text style={styles.infoLabel}>Idiomas</Text>
+                  <Text style={styles.infoValue}>{USER.languages.join(', ')}</Text>
+                </View>
+              </View>
+              <View style={styles.verseContainer}>
+                <Book size={18} color={Theme.colors.primary.lilac} />
+                <Text style={styles.verseText}>"{USER.verse}"</Text>
+              </View>
+            </View>
+            
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Sobre Mim</Text>
+              <Text style={styles.bioText}>{USER.bio}</Text>
+            </View>
+            
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Minhas Fotos</Text>
+              <View style={styles.photosGrid}>
+                {USER.photos.map((photo, index) => (
+                  <View key={index} style={styles.photoContainer}>
+                    <Image source={{ uri: photo }} style={styles.photo} />
+                  </View>
+                ))}
+                <TouchableOpacity style={styles.addPhotoButton}>
+                  <Text style={styles.addPhotoText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Interesses</Text>
+              <View style={styles.interestsContainer}>
+                {USER.interests.map((interest, index) => (
+                  <View key={index} style={styles.interestTag}>
+                    <Text style={styles.interestText}>{interest}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+            
+            <TouchableOpacity style={styles.editProfileButton}>
+              <Text style={styles.editProfileText}>Editar Perfil</Text>
             </TouchableOpacity>
-          </View>
-        </View>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Interesses</Text>
-          <View style={styles.interestsContainer}>
-            {USER.interests.map((interest, index) => (
-              <View key={index} style={styles.interestTag}>
-                <Text style={styles.interestText}>{interest}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-        
-        <TouchableOpacity style={styles.editProfileButton}>
-          <Text style={styles.editProfileText}>Editar Perfil</Text>
-        </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -373,6 +413,18 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.sm,
     color: Theme.colors.background.white,
   },
+  verificationBadge: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: 24,
+    height: 24,
+    borderRadius: Theme.borderRadius.circle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Theme.colors.background.white,
+  },
   profileName: {
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xl,
@@ -423,27 +475,28 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     marginHorizontal: Theme.spacing.md,
     marginBottom: Theme.spacing.lg,
   },
   statCard: {
-    flex: 1,
+    width: '23%',
     backgroundColor: Theme.colors.background.white,
     borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.md,
+    padding: Theme.spacing.sm,
     alignItems: 'center',
-    marginHorizontal: Theme.spacing.xs,
+    marginHorizontal: '1%',
     ...Theme.shadows.small,
   },
   statNumber: {
     fontFamily: Theme.typography.fontFamily.heading,
-    fontSize: Theme.typography.fontSize.xl,
+    fontSize: Theme.typography.fontSize.lg,
     color: Theme.colors.text.dark,
     marginVertical: Theme.spacing.xs,
   },
   statLabel: {
     fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
+    fontSize: Theme.typography.fontSize.xs,
     color: Theme.colors.text.medium,
   },
   streaksSection: {
