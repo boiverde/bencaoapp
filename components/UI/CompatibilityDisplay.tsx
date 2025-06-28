@@ -1,16 +1,7 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Theme from '@/constants/Theme';
-import { 
-  Heart, 
-  Users, 
-  Church, 
-  Star, 
-  Home, 
-  Settings,
-  ChevronRight,
-  Info
-} from 'lucide-react-native';
+import { Heart, Users, Church, Star, Chrome as Home, Settings, ChevronRight, Info } from 'lucide-react-native';
 import { CompatibilityScore, CompatibilityAlgorithm } from '@/utils/compatibilityAlgorithm';
 
 interface CompatibilityDisplayProps {
