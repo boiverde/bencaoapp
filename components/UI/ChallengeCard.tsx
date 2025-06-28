@@ -1,17 +1,6 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Target, 
-  Clock, 
-  Users, 
-  Trophy, 
-  CheckCircle,
-  Play,
-  Calendar,
-  Zap,
-  Star,
-  Gift
-} from 'lucide-react-native';
+import { Target, Clock, Users, Trophy, CircleCheck as CheckCircle, Play, Calendar, Zap, Star, Gift } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { Challenge } from '@/utils/gamificationSystem';
 
