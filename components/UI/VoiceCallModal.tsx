@@ -1,19 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Modal, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Phone, 
-  PhoneOff, 
-  Video, 
-  VideoOff, 
-  Mic, 
-  MicOff, 
-  Volume2, 
-  VolumeX,
-  HandHelping as PrayingHands,
-  Users,
-  MoreVertical
-} from 'lucide-react-native';
+import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Volume2, VolumeX, HandHelping as PrayingHands, Users, MoveVertical as MoreVertical } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { VoiceCall, CommunicationSystem } from '@/utils/communicationSystem';
 
