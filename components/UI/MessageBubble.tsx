@@ -1,21 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Book, 
-  HandHelping as PrayingHands, 
-  MapPin, 
-  Play, 
-  MoreHorizontal,
-  Copy,
-  Share2,
-  Trash2,
-  Edit3,
-  Heart,
-  Smile,
-  ThumbsUp,
-  Star
-} from 'lucide-react-native';
+import { Book, HandHelping as PrayingHands, MapPin, Play, MoveHorizontal as MoreHorizontal, Copy, Share2, Trash2, CreditCard as Edit3, Heart, Smile, ThumbsUp, Star } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { Message, CommunicationSystem } from '@/utils/communicationSystem';
 
