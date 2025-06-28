@@ -10,19 +10,7 @@ import {
   Dimensions
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  X, 
-  Heart, 
-  Users, 
-  Church, 
-  Star, 
-  Home, 
-  Settings,
-  TrendingUp,
-  AlertTriangle,
-  Lightbulb,
-  MessageSquare
-} from 'lucide-react-native';
+import { X, Heart, Users, Church, Star, Chrome as Home, Settings, TrendingUp, TriangleAlert as AlertTriangle, Lightbulb, MessageSquare } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { UserProfile, CompatibilityScore, CompatibilityAlgorithm } from '@/utils/compatibilityAlgorithm';
 
