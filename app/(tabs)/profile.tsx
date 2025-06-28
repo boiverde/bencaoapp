@@ -2,14 +2,18 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap, Shield } from 'lucide-react-native';
+import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap, Shield, BarChart2, Lightbulb } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGamification } from '@/hooks/useGamification';
 import { useSecurity } from '@/hooks/useSecurity';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import LevelProgressCard from '@/components/UI/LevelProgressCard';
 import AchievementCard from '@/components/UI/AchievementCard';
 import ChallengeCard from '@/components/UI/ChallengeCard';
 import SecurityDashboard from '@/components/UI/SecurityDashboard';
+import AnalyticsDashboard from '@/components/Analytics/AnalyticsDashboard';
+import InsightsScreen from '@/components/Analytics/InsightsScreen';
+import InsightCard from '@/components/Analytics/InsightCard';
 
 // Mock user data
 const USER = {
@@ -32,7 +36,7 @@ const USER = {
 };
 
 export default function ProfileScreen() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security' | 'analytics' | 'insights'>('overview');
   const {
     userStats,
     getCurrentLevel,
@@ -51,6 +55,11 @@ export default function ProfileScreen() {
     getVerificationBadge
   } = useSecurity();
 
+  const {
+    insights,
+    getUnreadInsightsCount
+  } = useAnalytics();
+
   const currentLevel = getCurrentLevel();
   const unlockedAchievements = getUnlockedAchievements();
   const lockedAchievements = getLockedAchievements();
@@ -58,6 +67,7 @@ export default function ProfileScreen() {
   const safetyRating = getSafetyRating();
   const verificationLevel = getVerificationLevel();
   const verificationBadge = getVerificationBadge();
+  const unreadInsightsCount = getUnreadInsightsCount();
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -93,6 +103,38 @@ export default function ProfileScreen() {
                 <Text style={styles.statLabel}>Segurança</Text>
               </View>
             </View>
+
+            {insights.length > 0 && (
+              <View style={styles.insightsPreview}>
+                <View style={styles.insightsHeader}>
+                  <Text style={styles.sectionTitle}>Insights</Text>
+                  {unreadInsightsCount > 0 && (
+                    <View style={styles.insightsBadge}>
+                      <Text style={styles.insightsBadgeText}>{unreadInsightsCount}</Text>
+                    </View>
+                  )}
+                </View>
+                
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {insights.slice(0, 3).map(insight => (
+                    <View key={insight.id} style={styles.insightCardContainer}>
+                      <InsightCard
+                        insight={insight}
+                        compact
+                        onPress={() => setActiveTab('insights')}
+                      />
+                    </View>
+                  ))}
+                  <TouchableOpacity 
+                    style={styles.viewAllInsights}
+                    onPress={() => setActiveTab('insights')}
+                  >
+                    <Lightbulb size={24} color={Theme.colors.primary.gold} />
+                    <Text style={styles.viewAllInsightsText}>Ver Todos</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            )}
 
             <View style={styles.streaksSection}>
               <Text style={styles.sectionTitle}>Sequências Ativas</Text>
@@ -178,7 +220,13 @@ export default function ProfileScreen() {
         );
 
       case 'security':
-        return <SecurityDashboard />;
+        return <SecurityDashboard onBack={() => setActiveTab('overview')} />;
+
+      case 'analytics':
+        return <AnalyticsDashboard onBack={() => setActiveTab('overview')} />;
+
+      case 'insights':
+        return <InsightsScreen onBack={() => setActiveTab('overview')} />;
 
       default:
         return null;
@@ -228,46 +276,71 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Gamification Tabs */}
+        {/* Profile Tabs */}
         <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'overview' && styles.activeTab]}
-            onPress={() => setActiveTab('overview')}
-          >
-            <Text style={[styles.tabText, activeTab === 'overview' && styles.activeTabText]}>
-              Visão Geral
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'achievements' && styles.activeTab]}
-            onPress={() => setActiveTab('achievements')}
-          >
-            <Text style={[styles.tabText, activeTab === 'achievements' && styles.activeTabText]}>
-              Conquistas
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'challenges' && styles.activeTab]}
-            onPress={() => setActiveTab('challenges')}
-          >
-            <Text style={[styles.tabText, activeTab === 'challenges' && styles.activeTabText]}>
-              Desafios
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'security' && styles.activeTab]}
-            onPress={() => setActiveTab('security')}
-          >
-            <Text style={[styles.tabText, activeTab === 'security' && styles.activeTabText]}>
-              Segurança
-            </Text>
-          </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'overview' && styles.activeTab]}
+              onPress={() => setActiveTab('overview')}
+            >
+              <Text style={[styles.tabText, activeTab === 'overview' && styles.activeTabText]}>
+                Visão Geral
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'achievements' && styles.activeTab]}
+              onPress={() => setActiveTab('achievements')}
+            >
+              <Text style={[styles.tabText, activeTab === 'achievements' && styles.activeTabText]}>
+                Conquistas
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'challenges' && styles.activeTab]}
+              onPress={() => setActiveTab('challenges')}
+            >
+              <Text style={[styles.tabText, activeTab === 'challenges' && styles.activeTabText]}>
+                Desafios
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'security' && styles.activeTab]}
+              onPress={() => setActiveTab('security')}
+            >
+              <Text style={[styles.tabText, activeTab === 'security' && styles.activeTabText]}>
+                Segurança
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'analytics' && styles.activeTab]}
+              onPress={() => setActiveTab('analytics')}
+            >
+              <Text style={[styles.tabText, activeTab === 'analytics' && styles.activeTabText]}>
+                Análises
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'insights' && styles.activeTab]}
+              onPress={() => setActiveTab('insights')}
+            >
+              <View style={styles.tabWithBadge}>
+                <Text style={[styles.tabText, activeTab === 'insights' && styles.activeTabText]}>
+                  Insights
+                </Text>
+                {unreadInsightsCount > 0 && (
+                  <View style={styles.tabBadge}>
+                    <Text style={styles.tabBadgeText}>{unreadInsightsCount}</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
 
         {renderTabContent()}
 
         {/* Original Profile Sections */}
-        {activeTab !== 'security' && (
+        {['overview', 'achievements', 'challenges'].includes(activeTab) && (
           <>
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Informações Religiosas</Text>
@@ -448,7 +521,6 @@ const styles = StyleSheet.create({
     marginLeft: Theme.spacing.xs,
   },
   tabsContainer: {
-    flexDirection: 'row',
     backgroundColor: Theme.colors.background.white,
     marginHorizontal: Theme.spacing.md,
     borderRadius: Theme.borderRadius.md,
@@ -456,8 +528,8 @@ const styles = StyleSheet.create({
     ...Theme.shadows.small,
   },
   tab: {
-    flex: 1,
     paddingVertical: Theme.spacing.md,
+    paddingHorizontal: Theme.spacing.md,
     alignItems: 'center',
     borderRadius: Theme.borderRadius.md,
   },
@@ -472,6 +544,25 @@ const styles = StyleSheet.create({
   activeTabText: {
     fontFamily: Theme.typography.fontFamily.subheading,
     color: Theme.colors.background.white,
+  },
+  tabWithBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tabBadge: {
+    backgroundColor: Theme.colors.status.error,
+    borderRadius: Theme.borderRadius.circle,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Theme.spacing.xs,
+  },
+  tabBadgeText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: 10,
+    color: Theme.colors.background.white,
+    paddingHorizontal: 2,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -498,6 +589,51 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.xs,
     color: Theme.colors.text.medium,
+  },
+  insightsPreview: {
+    marginBottom: Theme.spacing.lg,
+  },
+  insightsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
+  },
+  insightsBadge: {
+    backgroundColor: Theme.colors.status.error,
+    borderRadius: Theme.borderRadius.circle,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Theme.spacing.sm,
+  },
+  insightsBadgeText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.xs,
+    color: Theme.colors.background.white,
+    paddingHorizontal: 4,
+  },
+  insightCardContainer: {
+    width: 250,
+    marginRight: Theme.spacing.sm,
+    marginLeft: Theme.spacing.md,
+  },
+  viewAllInsights: {
+    width: 100,
+    backgroundColor: Theme.colors.background.white,
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Theme.spacing.md,
+    ...Theme.shadows.small,
+  },
+  viewAllInsightsText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.primary.gold,
+    marginTop: Theme.spacing.xs,
   },
   streaksSection: {
     marginBottom: Theme.spacing.lg,
