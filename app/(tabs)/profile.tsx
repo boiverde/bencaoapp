@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap, Shield, ChartBar as BarChart2, Lightbulb } from 'lucide-react-native';
+import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap, Shield, ChartBar as BarChart2, Lightbulb, MessageSquare, Users, Calendar } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGamification } from '@/hooks/useGamification';
 import { useSecurity } from '@/hooks/useSecurity';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useSocial } from '@/hooks/useSocial';
 import LevelProgressCard from '@/components/UI/LevelProgressCard';
 import AchievementCard from '@/components/UI/AchievementCard';
 import ChallengeCard from '@/components/UI/ChallengeCard';
@@ -14,6 +15,10 @@ import SecurityDashboard from '@/components/UI/SecurityDashboard';
 import AnalyticsDashboard from '@/components/Analytics/AnalyticsDashboard';
 import InsightsScreen from '@/components/Analytics/InsightsScreen';
 import InsightCard from '@/components/Analytics/InsightCard';
+import SocialFeed from '@/components/Social/SocialFeed';
+import SocialProfileHeader from '@/components/Social/SocialProfileHeader';
+import SocialGroupCard from '@/components/Social/SocialGroupCard';
+import SocialEventCard from '@/components/Social/SocialEventCard';
 
 // Mock user data
 const USER = {
@@ -36,12 +41,12 @@ const USER = {
 };
 
 export default function ProfileScreen() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security' | 'analytics' | 'insights'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security' | 'analytics' | 'insights' | 'social'>('overview');
+  const [socialSubTab, setSocialSubTab] = useState<'posts' | 'groups' | 'events'>('posts');
+  
   const {
     userStats,
     getCurrentLevel,
-    nextLevel,
-    levelProgress,
     getUnlockedAchievements,
     getLockedAchievements,
     activeChallenge,
@@ -60,6 +65,13 @@ export default function ProfileScreen() {
     getUnreadInsightsCount
   } = useAnalytics();
 
+  const {
+    socialProfile,
+    userPosts,
+    getUserGroups,
+    getUserEvents
+  } = useSocial();
+
   const currentLevel = getCurrentLevel();
   const unlockedAchievements = getUnlockedAchievements();
   const lockedAchievements = getLockedAchievements();
@@ -68,6 +80,8 @@ export default function ProfileScreen() {
   const verificationLevel = getVerificationLevel();
   const verificationBadge = getVerificationBadge();
   const unreadInsightsCount = getUnreadInsightsCount();
+  const userGroups = getUserGroups();
+  const userEvents = getUserEvents();
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -228,6 +242,122 @@ export default function ProfileScreen() {
       case 'insights':
         return <InsightsScreen onBack={() => setActiveTab('overview')} />;
 
+      case 'social':
+        return (
+          <View style={styles.socialContainer}>
+            {socialProfile && (
+              <SocialProfileHeader 
+                profile={socialProfile}
+                isCurrentUser={true}
+                onEdit={() => {}}
+              />
+            )}
+            
+            <View style={styles.socialTabsContainer}>
+              <TouchableOpacity 
+                style={[styles.socialTab, socialSubTab === 'posts' && styles.activeSocialTab]}
+                onPress={() => setSocialSubTab('posts')}
+              >
+                <MessageSquare 
+                  size={20} 
+                  color={socialSubTab === 'posts' ? Theme.colors.primary.blue : Theme.colors.text.medium} 
+                />
+                <Text style={[
+                  styles.socialTabText,
+                  socialSubTab === 'posts' && styles.activeSocialTabText
+                ]}>
+                  Publicações
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.socialTab, socialSubTab === 'groups' && styles.activeSocialTab]}
+                onPress={() => setSocialSubTab('groups')}
+              >
+                <Users 
+                  size={20} 
+                  color={socialSubTab === 'groups' ? Theme.colors.primary.blue : Theme.colors.text.medium} 
+                />
+                <Text style={[
+                  styles.socialTabText,
+                  socialSubTab === 'groups' && styles.activeSocialTabText
+                ]}>
+                  Grupos
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.socialTab, socialSubTab === 'events' && styles.activeSocialTab]}
+                onPress={() => setSocialSubTab('events')}
+              >
+                <Calendar 
+                  size={20} 
+                  color={socialSubTab === 'events' ? Theme.colors.primary.blue : Theme.colors.text.medium} 
+                />
+                <Text style={[
+                  styles.socialTabText,
+                  socialSubTab === 'events' && styles.activeSocialTabText
+                ]}>
+                  Eventos
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            {socialSubTab === 'posts' && (
+              <SocialFeed 
+                showCreatePost={true}
+                showFilters={false}
+              />
+            )}
+            
+            {socialSubTab === 'groups' && (
+              <FlatList
+                data={userGroups}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <SocialGroupCard 
+                    group={item}
+                    isMember={true}
+                  />
+                )}
+                contentContainerStyle={styles.socialListContent}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Users size={48} color={Theme.colors.text.light} />
+                    <Text style={styles.emptyTitle}>Nenhum grupo encontrado</Text>
+                    <Text style={styles.emptySubtitle}>
+                      Você ainda não participa de nenhum grupo
+                    </Text>
+                  </View>
+                }
+              />
+            )}
+            
+            {socialSubTab === 'events' && (
+              <FlatList
+                data={userEvents}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <SocialEventCard 
+                    event={item}
+                    isAttending={item.attendeeIds.includes('current_user')}
+                  />
+                )}
+                contentContainerStyle={styles.socialListContent}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Calendar size={48} color={Theme.colors.text.light} />
+                    <Text style={styles.emptyTitle}>Nenhum evento encontrado</Text>
+                    <Text style={styles.emptySubtitle}>
+                      Você ainda não está participando de nenhum evento
+                    </Text>
+                  </View>
+                }
+              />
+            )}
+          </View>
+        );
+
       default:
         return null;
     }
@@ -333,6 +463,14 @@ export default function ProfileScreen() {
                   </View>
                 )}
               </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'social' && styles.activeTab]}
+              onPress={() => setActiveTab('social')}
+            >
+              <Text style={[styles.tabText, activeTab === 'social' && styles.activeTabText]}>
+                Social
+              </Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -785,5 +923,58 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.subheading,
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.background.white,
+  },
+  socialContainer: {
+    flex: 1,
+  },
+  socialTabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: Theme.colors.background.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.ui.border,
+  },
+  socialTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Theme.spacing.md,
+  },
+  activeSocialTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: Theme.colors.primary.blue,
+  },
+  socialTabText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.medium,
+    marginLeft: Theme.spacing.xs,
+  },
+  activeSocialTabText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    color: Theme.colors.primary.blue,
+  },
+  socialListContent: {
+    padding: Theme.spacing.md,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Theme.spacing.xl,
+    minHeight: 300,
+  },
+  emptyTitle: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.lg,
+    color: Theme.colors.text.dark,
+    marginTop: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
+  },
+  emptySubtitle: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.medium,
+    textAlign: 'center',
   },
 });

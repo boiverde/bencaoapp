@@ -1,109 +1,128 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, TextInput } from 'react-native';
+import { useState, useRef } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Search, Filter, Heart, Image as ImageIcon, Camera, MoveVertical as MoreVertical } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
-
-// Mock data
-const POSTS = [
-  {
-    id: '1',
-    user: {
-      id: '1',
-      name: 'Mariana',
-      image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    },
-    image: 'https://images.pexels.com/photos/267559/pexels-photo-267559.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    caption: 'Momento especial de louvor na igreja hoje! Gratidão a Deus por mais um domingo abençoado com meus irmãos em Cristo. O Senhor tem feito maravilhas em nossas vidas. "Cantai ao Senhor um cântico novo, porque ele tem feito maravilhas; a sua destra e o seu braço santo lhe alcançaram a vitória." Salmos 98:1 🙏✨',
-    likes: 45,
-    timestamp: '2h atrás',
-  },
-  {
-    id: '2',
-    user: {
-      id: '2',
-      name: 'João',
-      image: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    },
-    image: 'https://images.pexels.com/photos/236339/pexels-photo-236339.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    caption: 'Retiro de jovens 2025! Que Deus continue abençoando nossa juventude. Foram dias intensos de comunhão, adoração e aprendizado da palavra. "Ninguém despreze a tua mocidade; mas sê o exemplo dos fiéis, na palavra, no trato, no amor, no espírito, na fé, na pureza." 1 Timóteo 4:12 🙌',
-    likes: 38,
-    timestamp: '5h atrás',
-  },
-  {
-    id: '3',
-    user: {
-      id: '3',
-      name: 'Gabriela',
-      image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    },
-    image: 'https://images.pexels.com/photos/935944/pexels-photo-935944.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    caption: 'Gratidão pelo encontro de casais hoje. Que benção compartilhar experiências e aprender mais sobre como construir um casamento baseado nos princípios de Deus. "O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha." 1 Coríntios 13:4 ❤️',
-    likes: 72,
-    timestamp: '1d atrás',
-  },
-];
+import { Search, Filter, Bell, Users, Calendar, Book, Heart } from 'lucide-react-native';
+import { useSocial } from '@/hooks/useSocial';
+import SocialFeed from '@/components/Social/SocialFeed';
+import SocialGroupCard from '@/components/Social/SocialGroupCard';
+import SocialEventCard from '@/components/Social/SocialEventCard';
+import SocialNotificationsList from '@/components/Social/SocialNotificationsList';
+import { SocialPost, SocialGroup, SocialEvent } from '@/utils/socialSystem';
 
 export default function CommunityScreen() {
+  const [activeTab, setActiveTab] = useState<'feed' | 'groups' | 'events' | 'notifications'>('feed');
   const [searchQuery, setSearchQuery] = useState('');
-  const [newPostCaption, setNewPostCaption] = useState('');
+  
+  const { 
+    feed, 
+    groups, 
+    events, 
+    joinGroup, 
+    attendEvent, 
+    markInterestedInEvent,
+    getUnreadNotificationsCount
+  } = useSocial();
 
-  const handleNewPost = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      // Here you would handle the new post creation
-      console.log('New post image:', result.assets[0].uri);
-    }
+  const handleJoinGroup = async (groupId: string) => {
+    await joinGroup(groupId);
   };
 
-  const handleCaptionChange = (text: string) => {
-    if (text.length <= 1000) {
-      setNewPostCaption(text);
-    }
+  const handleAttendEvent = async (eventId: string) => {
+    await attendEvent(eventId);
   };
 
-  const renderPost = ({ item }) => (
-    <View style={styles.postCard}>
-      <View style={styles.postHeader}>
-        <View style={styles.userInfo}>
-          <Image source={{ uri: item.user.image }} style={styles.userAvatar} />
-          <Text style={styles.userName}>{item.user.name}</Text>
-        </View>
-        <TouchableOpacity>
-          <MoreVertical size={20} color={Theme.colors.text.medium} />
-        </TouchableOpacity>
-      </View>
+  const handleInterestedInEvent = async (eventId: string) => {
+    await markInterestedInEvent(eventId);
+  };
 
-      <Image source={{ uri: item.image }} style={styles.postImage} />
-
-      <View style={styles.postActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Heart size={24} color={Theme.colors.text.dark} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.postInfo}>
-        <Text style={styles.likesCount}>{item.likes} curtidas</Text>
-        <View style={styles.captionContainer}>
-          <Text style={styles.captionName}>{item.user.name}</Text>
-          <Text style={styles.caption}>{item.caption}</Text>
-        </View>
-        <Text style={styles.timestamp}>{item.timestamp}</Text>
-      </View>
-    </View>
-  );
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'feed':
+        return (
+          <SocialFeed 
+            showCreatePost={true}
+            showFilters={true}
+          />
+        );
+      
+      case 'groups':
+        return (
+          <FlatList
+            data={groups}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <SocialGroupCard 
+                group={item}
+                onJoin={() => handleJoinGroup(item.id)}
+                isMember={item.memberIds.includes('current_user')}
+              />
+            )}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Users size={48} color={Theme.colors.text.light} />
+                <Text style={styles.emptyTitle}>Nenhum grupo encontrado</Text>
+                <Text style={styles.emptySubtitle}>
+                  Crie ou participe de grupos para compartilhar sua fé
+                </Text>
+              </View>
+            }
+          />
+        );
+      
+      case 'events':
+        return (
+          <FlatList
+            data={events}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <SocialEventCard 
+                event={item}
+                onAttend={() => handleAttendEvent(item.id)}
+                onInterested={() => handleInterestedInEvent(item.id)}
+                isAttending={item.attendeeIds.includes('current_user')}
+                isInterested={item.interestedIds.includes('current_user')}
+              />
+            )}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Calendar size={48} color={Theme.colors.text.light} />
+                <Text style={styles.emptyTitle}>Nenhum evento encontrado</Text>
+                <Text style={styles.emptySubtitle}>
+                  Crie ou participe de eventos para se conectar com a comunidade
+                </Text>
+              </View>
+            }
+          />
+        );
+      
+      case 'notifications':
+        return <SocialNotificationsList />;
+      
+      default:
+        return null;
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Comunidade Abençoada</Text>
+        <TouchableOpacity 
+          style={styles.notificationButton}
+          onPress={() => setActiveTab('notifications')}
+        >
+          <Bell size={24} color={Theme.colors.text.dark} />
+          {getUnreadNotificationsCount() > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>
+                {getUnreadNotificationsCount()}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
@@ -111,7 +130,7 @@ export default function CommunityScreen() {
           <Search size={20} color={Theme.colors.text.medium} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar publicações..."
+            placeholder="Buscar na comunidade..."
             placeholderTextColor={Theme.colors.text.medium}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -122,16 +141,78 @@ export default function CommunityScreen() {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={POSTS}
-        keyExtractor={(item) => item.id}
-        renderItem={renderPost}
-        contentContainerStyle={styles.postsList}
-      />
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'feed' && styles.activeTab]}
+          onPress={() => setActiveTab('feed')}
+        >
+          <Heart 
+            size={20} 
+            color={activeTab === 'feed' ? Theme.colors.primary.blue : Theme.colors.text.medium} 
+          />
+          <Text style={[
+            styles.tabText,
+            activeTab === 'feed' && styles.activeTabText
+          ]}>
+            Feed
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'groups' && styles.activeTab]}
+          onPress={() => setActiveTab('groups')}
+        >
+          <Users 
+            size={20} 
+            color={activeTab === 'groups' ? Theme.colors.primary.blue : Theme.colors.text.medium} 
+          />
+          <Text style={[
+            styles.tabText,
+            activeTab === 'groups' && styles.activeTabText
+          ]}>
+            Grupos
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'events' && styles.activeTab]}
+          onPress={() => setActiveTab('events')}
+        >
+          <Calendar 
+            size={20} 
+            color={activeTab === 'events' ? Theme.colors.primary.blue : Theme.colors.text.medium} 
+          />
+          <Text style={[
+            styles.tabText,
+            activeTab === 'events' && styles.activeTabText
+          ]}>
+            Eventos
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'notifications' && styles.activeTab]}
+          onPress={() => setActiveTab('notifications')}
+        >
+          <Bell 
+            size={20} 
+            color={activeTab === 'notifications' ? Theme.colors.primary.blue : Theme.colors.text.medium} 
+          />
+          <Text style={[
+            styles.tabText,
+            activeTab === 'notifications' && styles.activeTabText
+          ]}>
+            Notificações
+          </Text>
+          {getUnreadNotificationsCount() > 0 && activeTab !== 'notifications' && (
+            <View style={styles.tabBadge}>
+              <Text style={styles.tabBadgeText}>{getUnreadNotificationsCount()}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity style={styles.newPostButton} onPress={handleNewPost}>
-        <Camera size={24} color="#fff" />
-      </TouchableOpacity>
+      {renderTabContent()}
     </SafeAreaView>
   );
 }
@@ -142,132 +223,138 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.light,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: Theme.spacing.md,
-    alignItems: 'center',
+    backgroundColor: Theme.colors.background.white,
   },
   title: {
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xxl,
     color: Theme.colors.primary.blue,
   },
+  notificationButton: {
+    position: 'relative',
+    padding: Theme.spacing.xs,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: Theme.colors.status.error,
+    borderRadius: Theme.borderRadius.circle,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: 10,
+    color: Theme.colors.background.white,
+  },
   searchContainer: {
     flexDirection: 'row',
     paddingHorizontal: Theme.spacing.md,
-    marginBottom: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    backgroundColor: Theme.colors.background.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.ui.border,
   },
   searchBar: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.background.white,
+    backgroundColor: Theme.colors.background.light,
     borderRadius: Theme.borderRadius.md,
     paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
     marginRight: Theme.spacing.sm,
-    ...Theme.shadows.small,
   },
   searchInput: {
     flex: 1,
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.md,
+    paddingVertical: Theme.spacing.sm,
     marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
   },
   filterButton: {
-    backgroundColor: Theme.colors.background.white,
-    borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    height: 48,
-    ...Theme.shadows.small,
-  },
-  postsList: {
-    padding: Theme.spacing.md,
-  },
-  postCard: {
-    backgroundColor: Theme.colors.background.white,
-    borderRadius: Theme.borderRadius.lg,
-    marginBottom: Theme.spacing.md,
-    overflow: 'hidden',
-    ...Theme.shadows.small,
-  },
-  postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Theme.spacing.md,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  userAvatar: {
     width: 40,
     height: 40,
     borderRadius: Theme.borderRadius.circle,
-    marginRight: Theme.spacing.sm,
+    backgroundColor: Theme.colors.background.light,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  userName: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-  },
-  postImage: {
-    width: '100%',
-    height: 300,
-  },
-  postActions: {
+  tabsContainer: {
     flexDirection: 'row',
-    padding: Theme.spacing.md,
+    backgroundColor: Theme.colors.background.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.ui.border,
   },
-  actionButton: {
-    marginRight: Theme.spacing.md,
-  },
-  postInfo: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingBottom: Theme.spacing.md,
-  },
-  likesCount: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.xs,
-  },
-  captionContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: Theme.spacing.xs,
-  },
-  captionName: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-    marginRight: Theme.spacing.xs,
-  },
-  caption: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
+  tab: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Theme.spacing.md,
+    position: 'relative',
   },
-  timestamp: {
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: Theme.colors.primary.blue,
+  },
+  tabText: {
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.sm,
     color: Theme.colors.text.medium,
+    marginLeft: Theme.spacing.xs,
   },
-  newPostButton: {
+  activeTabText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    color: Theme.colors.primary.blue,
+  },
+  tabBadge: {
     position: 'absolute',
-    right: Theme.spacing.md,
-    bottom: Theme.spacing.lg,
-    width: 56,
-    height: 56,
+    top: 8,
+    right: 15,
+    backgroundColor: Theme.colors.status.error,
     borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.primary.blue,
+    minWidth: 16,
+    height: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Theme.shadows.medium,
+    paddingHorizontal: 3,
+  },
+  tabBadgeText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: 8,
+    color: Theme.colors.background.white,
+  },
+  listContent: {
+    padding: Theme.spacing.md,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Theme.spacing.xl,
+    minHeight: 300,
+  },
+  emptyTitle: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.lg,
+    color: Theme.colors.text.dark,
+    marginTop: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
+  },
+  emptySubtitle: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.medium,
+    textAlign: 'center',
   },
 });
