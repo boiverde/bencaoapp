@@ -4,6 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
 import { Send, Book, HandHelping as PrayingHands } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import NotificationBell from '@/components/UI/NotificationBell';
+import NotificationModal from '@/components/UI/NotificationModal';
+import { useNotifications } from '@/hooks/useNotifications';
 
 // Mock data
 const MESSAGES = [
@@ -56,6 +59,8 @@ const CHAT_USER = {
 
 export default function ChatScreen() {
   const [messageText, setMessageText] = useState('');
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  const { sendMessageNotification } = useNotifications();
   
   const renderMessage = ({ item }) => {
     const isVerse = item.type === 'verse';
@@ -97,6 +102,11 @@ export default function ChatScreen() {
   const handleSendMessage = () => {
     if (messageText.trim()) {
       // In a real app, this would send the message to the backend
+      // Simulate receiving a message notification
+      setTimeout(() => {
+        sendMessageNotification(CHAT_USER.name, 'Obrigada pela mensagem! 😊');
+      }, 2000);
+      
       setMessageText('');
     }
   };
@@ -114,9 +124,15 @@ export default function ChatScreen() {
             <Text style={styles.userStatus}>{CHAT_USER.lastActive}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.prayButton}>
-          <PrayingHands size={20} color={Theme.colors.primary.blue} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.prayButton}>
+            <PrayingHands size={20} color={Theme.colors.primary.blue} />
+          </TouchableOpacity>
+          <NotificationBell 
+            onPress={() => setNotificationModalVisible(true)}
+            color={Theme.colors.primary.blue}
+          />
+        </View>
       </View>
       
       <FlatList
@@ -158,6 +174,11 @@ export default function ChatScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <NotificationModal
+        visible={notificationModalVisible}
+        onClose={() => setNotificationModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -213,6 +234,10 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.sm,
     color: Theme.colors.text.medium,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   prayButton: {
     width: 40,
     height: 40,
@@ -220,6 +245,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.lilac,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: Theme.spacing.sm,
   },
   messagesList: {
     padding: Theme.spacing.md,

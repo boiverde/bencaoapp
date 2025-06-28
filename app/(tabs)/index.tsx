@@ -5,6 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
 import { Heart, X, MapPin, Globe, Church, Star } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import NotificationBell from '@/components/UI/NotificationBell';
+import NotificationModal from '@/components/UI/NotificationModal';
+import { useNotifications } from '@/hooks/useNotifications';
 
 // Mock data
 const PROFILES = [
@@ -34,7 +37,10 @@ const PROFILES = [
 
 export default function DiscoverScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
   const swipe = useRef(new Animated.ValueXY()).current;
+  const { sendMatchNotification } = useNotifications();
+  
   const rotation = swipe.x.interpolate({
     inputRange: [-100, 0, 100],
     outputRange: ['-8deg', '0deg', '8deg'],
@@ -54,6 +60,11 @@ export default function DiscoverScreen() {
           toValue: { x: 500, y: gesture.dy },
           useNativeDriver: true,
         }).start(() => {
+          // Send match notification
+          const profile = PROFILES[currentIndex];
+          if (profile) {
+            sendMatchNotification(profile.name);
+          }
           setCurrentIndex(prevIndex => prevIndex + 1);
           swipe.setValue({ x: 0, y: 0 });
         });
@@ -80,6 +91,11 @@ export default function DiscoverScreen() {
       toValue: { x: 500, y: 0 },
       useNativeDriver: true,
     }).start(() => {
+      // Send match notification
+      const profile = PROFILES[currentIndex];
+      if (profile) {
+        sendMatchNotification(profile.name);
+      }
       setCurrentIndex(prevIndex => prevIndex + 1);
       swipe.setValue({ x: 0, y: 0 });
     });
@@ -105,10 +121,21 @@ export default function DiscoverScreen() {
   if (currentIndex >= PROFILES.length) {
     return (
       <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Bênção Match</Text>
+          <NotificationBell 
+            onPress={() => setNotificationModalVisible(true)}
+            color={Theme.colors.primary.blue}
+          />
+        </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Não há mais perfis disponíveis.</Text>
           <Text style={styles.emptySubtext}>Tente novamente mais tarde ou ajuste seus filtros.</Text>
         </View>
+        <NotificationModal
+          visible={notificationModalVisible}
+          onClose={() => setNotificationModalVisible(false)}
+        />
       </SafeAreaView>
     );
   }
@@ -119,6 +146,10 @@ export default function DiscoverScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Bênção Match</Text>
+        <NotificationBell 
+          onPress={() => setNotificationModalVisible(true)}
+          color={Theme.colors.primary.blue}
+        />
       </View>
       
       <View style={styles.cardContainer}>
@@ -176,6 +207,11 @@ export default function DiscoverScreen() {
           <Heart size={30} color="#fff" fill="#fff" />
         </TouchableOpacity>
       </View>
+
+      <NotificationModal
+        visible={notificationModalVisible}
+        onClose={() => setNotificationModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -186,9 +222,11 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.light,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: Theme.spacing.md,
-    alignItems: 'center',
   },
   title: {
     fontFamily: Theme.typography.fontFamily.heading,
