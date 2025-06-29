@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { Lock, Crown } from 'lucide-react-native';
-import Theme from '@/constants/Theme';
+import Colors from '@/constants/Colors';
 import { useMonetization } from '@/hooks/useMonetization';
 
 interface FeatureGateProps {
@@ -32,7 +32,7 @@ export default function FeatureGate({
   return (
     <View style={styles.container}>
       <View style={styles.lockIconContainer}>
-        <Lock size={32} color={Theme.colors.primary.blue} />
+        <Lock size={32} color={Colors.primary.blue} />
       </View>
       
       <Text style={styles.title}>Recurso Premium</Text>
@@ -45,7 +45,7 @@ export default function FeatureGate({
           style={styles.upgradeButton}
           onPress={onUpgrade}
         >
-          <Crown size={16} color={Theme.colors.background.white} />
+          <Crown size={16} color={Colors.background.white} />
           <Text style={styles.upgradeButtonText}>Assinar Agora</Text>
         </TouchableOpacity>
       )}
@@ -55,47 +55,51 @@ export default function FeatureGate({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Theme.colors.background.white,
-    borderRadius: Theme.borderRadius.lg,
-    padding: Theme.spacing.lg,
+    backgroundColor: Colors.background.white,
+    borderRadius: 12,
+    padding: 24,
     alignItems: 'center',
-    ...Theme.shadows.small,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   lockIconContainer: {
     width: 64,
     height: 64,
-    borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.primary.blue + '20',
+    borderRadius: 32,
+    backgroundColor: Colors.primary.blue + '20',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Theme.spacing.md,
+    marginBottom: 16,
   },
   title: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.lg,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.sm,
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 18,
+    color: Colors.text.dark,
+    marginBottom: 8,
   },
   description: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.medium,
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 16,
+    color: Colors.text.medium,
     textAlign: 'center',
-    marginBottom: Theme.spacing.lg,
+    marginBottom: 24,
     lineHeight: 22,
   },
   upgradeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.primary.blue,
-    borderRadius: Theme.borderRadius.md,
-    paddingHorizontal: Theme.spacing.lg,
-    paddingVertical: Theme.spacing.md,
+    backgroundColor: Colors.primary.blue,
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   upgradeButtonText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.background.white,
-    marginLeft: Theme.spacing.sm,
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 16,
+    color: Colors.background.white,
+    marginLeft: 8,
   },
 });
