@@ -7,7 +7,8 @@ import {
   RefreshControl, 
   TouchableOpacity,
   TextInput,
-  ActivityIndicator
+  ActivityIndicator,
+  ScrollView
 } from 'react-native';
 import { 
   Filter, 
