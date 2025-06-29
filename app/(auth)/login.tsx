@@ -1,51 +1,11 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import { Mail, Lock, ArrowRight } from 'lucide-react-native';
-import { useAuthContext } from '@/components/Auth/AuthContext';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuthContext();
-  const router = useRouter();
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await login(email, password);
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      let errorMessage = 'Ocorreu um erro ao fazer login';
-      
-      // Handle specific Firebase error codes
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        errorMessage = 'Email ou senha incorretos';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Email inválido';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'Muitas tentativas de login. Tente novamente mais tarde';
-      }
-      
-      Alert.alert('Erro de Login', errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleForgotPassword = () => {
-    router.push('/(auth)/reset-password');
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -73,8 +33,6 @@ export default function LoginScreen() {
             placeholderTextColor={Theme.colors.text.medium}
             keyboardType="email-address"
             autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
           />
         </View>
         
@@ -85,29 +43,19 @@ export default function LoginScreen() {
             placeholder="Senha"
             placeholderTextColor={Theme.colors.text.medium}
             secureTextEntry
-            value={password}
-            onChangeText={setPassword}
           />
         </View>
         
-        <TouchableOpacity onPress={handleForgotPassword}>
+        <TouchableOpacity>
           <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity 
-          style={styles.loginButton} 
-          onPress={handleLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Text style={styles.loginButtonText}>Entrar</Text>
-              <ArrowRight size={20} color="#fff" />
-            </>
-          )}
-        </TouchableOpacity>
+        <Link href="/(tabs)" asChild>
+          <TouchableOpacity style={styles.loginButton}>
+            <Text style={styles.loginButtonText}>Entrar</Text>
+            <ArrowRight size={20} color="#fff" />
+          </TouchableOpacity>
+        </Link>
         
         <Text style={styles.orText}>ou entre com</Text>
         
