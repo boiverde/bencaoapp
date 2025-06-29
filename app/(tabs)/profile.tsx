@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap, Shield, ChartBar as BarChart2, Lightbulb, MessageSquare, Users, Calendar, Crown } from 'lucide-react-native';
+import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap, Shield, ChartBar as BarChart2, Lightbulb, MessageSquare, Users, Calendar } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGamification } from '@/hooks/useGamification';
 import { useSecurity } from '@/hooks/useSecurity';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useSocial } from '@/hooks/useSocial';
-import { useMonetization } from '@/hooks/useMonetization';
 import LevelProgressCard from '@/components/UI/LevelProgressCard';
 import AchievementCard from '@/components/UI/AchievementCard';
 import ChallengeCard from '@/components/UI/ChallengeCard';
@@ -20,11 +19,6 @@ import SocialFeed from '@/components/Social/SocialFeed';
 import SocialProfileHeader from '@/components/Social/SocialProfileHeader';
 import SocialGroupCard from '@/components/Social/SocialGroupCard';
 import SocialEventCard from '@/components/Social/SocialEventCard';
-import SubscriptionBanner from '@/components/Monetization/SubscriptionBanner';
-import SubscriptionPlansScreen from '@/components/Monetization/SubscriptionPlansScreen';
-import InAppPurchasesScreen from '@/components/Monetization/InAppPurchasesScreen';
-import SubscriptionSettingsScreen from '@/components/Monetization/SubscriptionSettingsScreen';
-import PurchaseHistoryScreen from '@/components/Monetization/PurchaseHistoryScreen';
 
 // Mock user data
 const USER = {
@@ -47,15 +41,12 @@ const USER = {
 };
 
 export default function ProfileScreen() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security' | 'analytics' | 'insights' | 'social' | 'subscription'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security' | 'analytics' | 'insights' | 'social'>('overview');
   const [socialSubTab, setSocialSubTab] = useState<'posts' | 'groups' | 'events'>('posts');
-  const [subscriptionSubScreen, setSubscriptionSubScreen] = useState<'plans' | 'purchases' | 'settings' | 'history'>('plans');
   
   const {
     userStats,
     getCurrentLevel,
-    nextLevel,
-    levelProgress,
     getUnlockedAchievements,
     getLockedAchievements,
     activeChallenge,
@@ -81,11 +72,6 @@ export default function ProfileScreen() {
     getUserEvents
   } = useSocial();
 
-  const {
-    isSubscribed,
-    getCurrentPlan
-  } = useMonetization();
-
   const currentLevel = getCurrentLevel();
   const unlockedAchievements = getUnlockedAchievements();
   const lockedAchievements = getLockedAchievements();
@@ -102,8 +88,6 @@ export default function ProfileScreen() {
       case 'overview':
         return (
           <View>
-            <SubscriptionBanner onPress={() => setActiveTab('subscription')} />
-            
             <LevelProgressCard
               currentLevel={currentLevel}
               nextLevel={nextLevel}
@@ -374,37 +358,6 @@ export default function ProfileScreen() {
           </View>
         );
 
-      case 'subscription':
-        switch (subscriptionSubScreen) {
-          case 'plans':
-            return (
-              <SubscriptionPlansScreen 
-                onBack={() => setActiveTab('overview')} 
-              />
-            );
-          case 'purchases':
-            return (
-              <InAppPurchasesScreen 
-                onBack={() => setSubscriptionSubScreen('plans')} 
-              />
-            );
-          case 'settings':
-            return (
-              <SubscriptionSettingsScreen 
-                onBack={() => setSubscriptionSubScreen('plans')} 
-                onViewPlans={() => setSubscriptionSubScreen('plans')}
-              />
-            );
-          case 'history':
-            return (
-              <PurchaseHistoryScreen 
-                onBack={() => setSubscriptionSubScreen('settings')} 
-              />
-            );
-          default:
-            return null;
-        }
-
       default:
         return null;
     }
@@ -439,13 +392,6 @@ export default function ProfileScreen() {
               {verificationBadge && (
                 <View style={[styles.verificationBadge, { backgroundColor: verificationBadge.color }]}>
                   <Shield size={12} color={Theme.colors.background.white} />
-                </View>
-              )}
-              
-              {/* Premium Badge */}
-              {isSubscribed() && (
-                <View style={styles.premiumBadge}>
-                  <Crown size={12} color={Theme.colors.background.white} />
                 </View>
               )}
             </View>
@@ -525,24 +471,6 @@ export default function ProfileScreen() {
               <Text style={[styles.tabText, activeTab === 'social' && styles.activeTabText]}>
                 Social
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'subscription' && styles.activeTab]}
-              onPress={() => {
-                setActiveTab('subscription');
-                setSubscriptionSubScreen('plans');
-              }}
-            >
-              <View style={styles.tabWithBadge}>
-                <Text style={[styles.tabText, activeTab === 'subscription' && styles.activeTabText]}>
-                  Assinatura
-                </Text>
-                {isSubscribed() && (
-                  <View style={[styles.tabBadge, styles.premiumTabBadge]}>
-                    <Crown size={10} color={Theme.colors.background.white} />
-                  </View>
-                )}
-              </View>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -708,19 +636,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Theme.colors.background.white,
   },
-  premiumBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 24,
-    height: 24,
-    borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.primary.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Theme.colors.background.white,
-  },
   profileName: {
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xl,
@@ -780,9 +695,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: Theme.spacing.xs,
-  },
-  premiumTabBadge: {
-    backgroundColor: Theme.colors.primary.gold,
   },
   tabBadgeText: {
     fontFamily: Theme.typography.fontFamily.subheading,
