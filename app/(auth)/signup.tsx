@@ -1,62 +1,25 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler, Users, GraduationCap, Radiation as Zodiac, BookOpen, Globe } from 'lucide-react-native';
-import DenominationModal from '@/components/UI/DenominationModal';
-import LocationModal from '@/components/UI/LocationModal';
+import { Link, useRouter } from 'expo-router';
+import { Mail, Lock, User, Calendar, ChevronRight } from 'lucide-react-native';
+import { useAuthContext } from '@/components/Auth/AuthContext';
 import PhotoUpload from '@/components/UI/PhotoUpload';
-import MoreAboutMeModal from '@/components/UI/MoreAboutMeModal';
-import LanguagesModal from '@/components/UI/LanguagesModal';
 import * as ImagePicker from 'expo-image-picker';
 
-const EDUCATION_LEVELS = [
-  'Ensino Fundamental',
-  'Ensino Médio',
-  'Ensino Técnico',
-  'Graduação',
-  'Pós-graduação',
-  'Mestrado',
-  'Doutorado'
-];
-
-const ZODIAC_SIGNS = [
-  'Áries',
-  'Touro',
-  'Gêmeos',
-  'Câncer',
-  'Leão',
-  'Virgem',
-  'Libra',
-  'Escorpião',
-  'Sagitário',
-  'Capricórnio',
-  'Aquário',
-  'Peixes'
-];
-
 export default function SignupScreen() {
-  const [denominationModalVisible, setDenominationModalVisible] = useState(false);
-  const [locationModalVisible, setLocationModalVisible] = useState(false);
-  const [selectedDenomination, setSelectedDenomination] = useState<string>();
-  const [selectedLocation, setSelectedLocation] = useState<{ state?: string; city?: string }>({});
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [birthdate, setBirthdate] = useState('');
   const [photo, setPhoto] = useState<string>();
-  const [aboutMe, setAboutMe] = useState('');
-  const [favoriteWorship, setFavoriteWorship] = useState('');
-  const [height, setHeight] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
-  const [children, setChildren] = useState('0');
-  const [education, setEducation] = useState<string>();
-  const [zodiacSign, setZodiacSign] = useState<string>();
-  const [churchFrequency, setChurchFrequency] = useState('1');
-  const [educationModalVisible, setEducationModalVisible] = useState(false);
-  const [zodiacModalVisible, setZodiacModalVisible] = useState(false);
-  const [churchFrequencyModalVisible, setChurchFrequencyModalVisible] = useState(false);
-  const [childrenModalVisible, setChildrenModalVisible] = useState(false);
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [languagesModalVisible, setLanguagesModalVisible] = useState(false);
+  const { register } = useAuthContext();
+  const router = useRouter();
 
   const handleSelectPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -71,22 +34,55 @@ export default function SignupScreen() {
     }
   };
 
-  const handleAboutMeChange = (text: string) => {
-    if (text.length <= 500) {
-      setAboutMe(text);
+  const handleSignup = async () => {
+    // Validate inputs
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
+      return;
     }
-  };
 
-  const handleFavoriteWorshipChange = (text: string) => {
-    if (text.length <= 30) {
-      setFavoriteWorship(text);
+    if (password !== confirmPassword) {
+      Alert.alert('Erro', 'As senhas não coincidem');
+      return;
     }
-  };
 
-  const handleHeightChange = (text: string) => {
-    const numericValue = text.replace(/[^0-9]/g, '');
-    if (numericValue.length <= 3) {
-      setHeight(numericValue);
+    if (password.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await register(email, password, name);
+      
+      // In a real app, you would upload the photo to storage here
+      // and update the user profile with the photo URL
+      
+      Alert.alert(
+        'Conta Criada',
+        'Sua conta foi criada com sucesso!',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)')
+          }
+        ]
+      );
+    } catch (error: any) {
+      let errorMessage = 'Ocorreu um erro ao criar sua conta';
+      
+      // Handle specific Firebase error codes
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Este email já está em uso';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Email inválido';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'A senha é muito fraca';
+      }
+      
+      Alert.alert('Erro de Cadastro', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -119,67 +115,10 @@ export default function SignupScreen() {
               placeholder="Nome completo"
               placeholderTextColor={Theme.colors.text.medium}
               autoCapitalize="words"
+              value={name}
+              onChangeText={setName}
             />
           </View>
-          
-          <View style={styles.inputContainer}>
-            <Calendar size={20} color={Theme.colors.text.medium} />
-            <TextInput
-              style={styles.input}
-              placeholder="Data de nascimento"
-              placeholderTextColor={Theme.colors.text.medium}
-              keyboardType="numeric"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Ruler size={20} color={Theme.colors.text.medium} />
-            <TextInput
-              style={styles.input}
-              placeholder="Altura"
-              placeholderTextColor={Theme.colors.text.medium}
-              keyboardType="numeric"
-              value={height}
-              onChangeText={handleHeightChange}
-            />
-            {height.length > 0 && (
-              <Text style={styles.heightUnit}>cm</Text>
-            )}
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.inputContainer}
-            onPress={() => setDenominationModalVisible(true)}
-          >
-            <Church size={20} color={Theme.colors.text.medium} />
-            <View style={styles.selectContainer}>
-              <Text style={[
-                styles.selectText,
-                selectedDenomination && styles.selectedText
-              ]}>
-                {selectedDenomination || 'Selecione sua denominação'}
-              </Text>
-              <ChevronRight size={20} color={Theme.colors.text.medium} />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.inputContainer}
-            onPress={() => setLocationModalVisible(true)}
-          >
-            <MapPin size={20} color={Theme.colors.text.medium} />
-            <View style={styles.selectContainer}>
-              <Text style={[
-                styles.selectText,
-                (selectedLocation.state || selectedLocation.city) && styles.selectedText
-              ]}>
-                {selectedLocation.state && selectedLocation.city
-                  ? `${selectedLocation.city}, ${selectedLocation.state}`
-                  : 'Selecione sua localização'}
-              </Text>
-              <ChevronRight size={20} color={Theme.colors.text.medium} />
-            </View>
-          </TouchableOpacity>
           
           <View style={styles.inputContainer}>
             <Mail size={20} color={Theme.colors.text.medium} />
@@ -189,6 +128,8 @@ export default function SignupScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
           
@@ -199,6 +140,8 @@ export default function SignupScreen() {
               placeholder="Senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
+              value={password}
+              onChangeText={setPassword}
             />
           </View>
           
@@ -209,138 +152,24 @@ export default function SignupScreen() {
               placeholder="Confirmar senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
             />
-          </View>
-
-          <View style={styles.aboutMeContainer}>
-            <Text style={styles.aboutMeTitle}>Sobre mim</Text>
-            <TextInput
-              style={styles.aboutMeInput}
-              placeholder="Conte um pouco sobre você, seus interesses e o que busca em um relacionamento..."
-              placeholderTextColor={Theme.colors.text.medium}
-              multiline
-              textAlignVertical="top"
-              value={aboutMe}
-              onChangeText={handleAboutMeChange}
-            />
-            <Text style={styles.characterCount}>
-              {aboutMe.length}/500 caracteres
-            </Text>
-          </View>
-
-          <View style={styles.favoriteWorshipContainer}>
-            <Text style={styles.favoriteWorshipTitle}>Louvor favorito</Text>
-            <View style={styles.favoriteWorshipInputContainer}>
-              <Music size={20} color={Theme.colors.text.medium} />
-              <TextInput
-                style={styles.favoriteWorshipInput}
-                placeholder="Ex: Deus é Deus - Delino Marçal"
-                placeholderTextColor={Theme.colors.text.medium}
-                value={favoriteWorship}
-                onChangeText={handleFavoriteWorshipChange}
-              />
-            </View>
-            <Text style={styles.characterCount}>
-              {favoriteWorship.length}/30 caracteres
-            </Text>
-          </View>
-
-          <View style={styles.moreAboutMeContainer}>
-            <Text style={styles.sectionTitle}>Mais sobre mim</Text>
-            
-            <View style={styles.moreAboutMeSection}>
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setChildrenModalVisible(true)}
-              >
-                <Users size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Filhos</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    children && styles.selectedText
-                  ]}>
-                    {children || 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setEducationModalVisible(true)}
-              >
-                <GraduationCap size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Formação</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    education && styles.selectedText
-                  ]}>
-                    {education || 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setZodiacModalVisible(true)}
-              >
-                <Zodiac size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Signo</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    zodiacSign && styles.selectedText
-                  ]}>
-                    {zodiacSign || 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setChurchFrequencyModalVisible(true)}
-              >
-                <BookOpen size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Frequência na Igreja</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    churchFrequency && styles.selectedText
-                  ]}>
-                    {churchFrequency ? `${churchFrequency}x por semana` : 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setLanguagesModalVisible(true)}
-              >
-                <Globe size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Línguas faladas</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    languages.length > 0 && styles.selectedText
-                  ]}>
-                    {languages.length > 0 
-                      ? languages.join(', ')
-                      : 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-            </View>
           </View>
           
-          <TouchableOpacity style={styles.signupButton}>
-            <Text style={styles.signupButtonText}>Criar conta</Text>
-            <ChevronRight size={20} color="#fff" />
+          <TouchableOpacity 
+            style={styles.signupButton}
+            onPress={handleSignup}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Text style={styles.signupButtonText}>Criar conta</Text>
+                <ChevronRight size={20} color="#fff" />
+              </>
+            )}
           </TouchableOpacity>
           
           <View style={styles.termsContainer}>
@@ -363,64 +192,6 @@ export default function SignupScreen() {
       </ScrollView>
       
       <Text style={styles.verseText}>"Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará." Salmos 37:5</Text>
-
-      <DenominationModal
-        visible={denominationModalVisible}
-        onClose={() => setDenominationModalVisible(false)}
-        onSelect={setSelectedDenomination}
-        selectedDenomination={selectedDenomination}
-      />
-
-      <LocationModal
-        visible={locationModalVisible}
-        onClose={() => setLocationModalVisible(false)}
-        onSelect={setSelectedLocation}
-        selectedState={selectedLocation.state}
-        selectedCity={selectedLocation.city}
-      />
-
-      <MoreAboutMeModal
-        visible={childrenModalVisible}
-        onClose={() => setChildrenModalVisible(false)}
-        onSelect={setChildren}
-        selectedValue={children}
-        options={Array.from({ length: 11 }, (_, i) => i.toString())}
-        title="Número de Filhos"
-      />
-
-      <MoreAboutMeModal
-        visible={educationModalVisible}
-        onClose={() => setEducationModalVisible(false)}
-        onSelect={setEducation}
-        selectedValue={education}
-        options={EDUCATION_LEVELS}
-        title="Nível de Escolaridade"
-      />
-
-      <MoreAboutMeModal
-        visible={zodiacModalVisible}
-        onClose={() => setZodiacModalVisible(false)}
-        onSelect={setZodiacSign}
-        selectedValue={zodiacSign}
-        options={ZODIAC_SIGNS}
-        title="Signo"
-      />
-
-      <MoreAboutMeModal
-        visible={churchFrequencyModalVisible}
-        onClose={() => setChurchFrequencyModalVisible(false)}
-        onSelect={setChurchFrequency}
-        selectedValue={churchFrequency}
-        options={Array.from({ length: 7 }, (_, i) => (i + 1).toString())}
-        title="Frequência na Igreja"
-      />
-
-      <LanguagesModal
-        visible={languagesModalVisible}
-        onClose={() => setLanguagesModalVisible(false)}
-        onSelect={setLanguages}
-        selectedLanguages={languages}
-      />
     </View>
   );
 }
@@ -495,106 +266,6 @@ const styles = StyleSheet.create({
     paddingVertical: Theme.spacing.md,
     marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
-  },
-  heightUnit: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.medium,
-    marginLeft: Theme.spacing.sm,
-    paddingVertical: Theme.spacing.md,
-  },
-  selectContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Theme.spacing.md,
-    marginLeft: Theme.spacing.sm,
-  },
-  selectText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.medium,
-  },
-  selectedText: {
-    color: Theme.colors.text.dark,
-  },
-  aboutMeContainer: {
-    marginBottom: Theme.spacing.md,
-  },
-  aboutMeTitle: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.sm,
-  },
-  aboutMeInput: {
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.md,
-    height: 120,
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-  },
-  favoriteWorshipContainer: {
-    marginBottom: Theme.spacing.md,
-  },
-  favoriteWorshipTitle: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.sm,
-  },
-  favoriteWorshipInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    paddingHorizontal: Theme.spacing.md,
-  },
-  favoriteWorshipInput: {
-    flex: 1,
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    paddingVertical: Theme.spacing.md,
-    marginLeft: Theme.spacing.sm,
-    color: Theme.colors.text.dark,
-  },
-  characterCount: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-    textAlign: 'right',
-    marginTop: Theme.spacing.xs,
-  },
-  moreAboutMeContainer: {
-    marginBottom: Theme.spacing.lg,
-  },
-  sectionTitle: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.lg,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.md,
-  },
-  moreAboutMeSection: {
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.md,
-  },
-  moreAboutMeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.ui.border,
-  },
-  moreAboutMeLabel: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-    marginLeft: Theme.spacing.sm,
-    width: 100,
   },
   signupButton: {
     flexDirection: 'row',
