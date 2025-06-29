@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
 import { Settings, Heart, LogOut, CreditCard as Edit, Church, Globe, Book, MapPin, Trophy, Target, Zap, Shield, ChartBar as BarChart2, Lightbulb, MessageSquare, Users, Calendar } from 'lucide-react-native';
@@ -53,7 +53,9 @@ export default function ProfileScreen() {
     getUnlockedAchievements,
     getLockedAchievements,
     activeChallenge,
-    dailyChallenge
+    dailyChallenge,
+    levelProgress,
+    nextLevel
   } = useGamification();
 
   const {
