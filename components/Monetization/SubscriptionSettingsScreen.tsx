@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useMonetization } from '@/hooks/useMonetization';
+import { MonetizationSystem } from '@/utils/monetizationSystem';
 
 interface SubscriptionSettingsScreenProps {
   onBack: () => void;

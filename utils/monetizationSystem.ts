@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Colors from '@/constants/Colors';
 
 export interface SubscriptionPlan {
   id: string;
@@ -75,7 +76,7 @@ export class MonetizationSystem {
         'Versículo diário personalizado'
       ],
       storeProductId: {},
-      color: Theme.colors.primary.blue,
+      color: Colors.primary.blue,
       blessings: [
         'Acesso à comunidade cristã'
       ]
@@ -101,7 +102,7 @@ export class MonetizationSystem {
         ios: 'com.bencaomatch.blessed.monthly',
         android: 'com.bencaomatch.blessed.monthly'
       },
-      color: Theme.colors.primary.pink,
+      color: Colors.primary.pink,
       blessings: [
         'Acesso a círculos de oração exclusivos',
         'Mentoria espiritual personalizada'
@@ -126,7 +127,7 @@ export class MonetizationSystem {
         ios: 'com.bencaomatch.blessed.yearly',
         android: 'com.bencaomatch.blessed.yearly'
       },
-      color: Theme.colors.primary.gold,
+      color: Colors.primary.gold,
       blessings: [
         'Acesso a círculos de oração exclusivos',
         'Mentoria espiritual personalizada',
