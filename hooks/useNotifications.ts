@@ -30,42 +30,56 @@ export function useNotifications() {
   const responseListener = useRef<Notifications.Subscription>();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
-      if (token) {
-        setExpoPushToken(token);
+    let isMounted = true;
+    
+    const initializeNotifications = async () => {
+      try {
+        const token = await registerForPushNotificationsAsync();
+        if (token && isMounted) {
+          setExpoPushToken(token);
+        }
+        
+        // Listen for incoming notifications
+        notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+          if (!isMounted) return;
+          
+          const notificationData: NotificationData = {
+            id: notification.request.identifier,
+            title: notification.request.content.title || '',
+            body: notification.request.content.body || '',
+            type: notification.request.content.data?.type || 'message',
+            data: notification.request.content.data,
+            timestamp: Date.now(),
+            read: false,
+          };
+          
+          setNotifications(prev => [notificationData, ...prev]);
+          setUnreadCount(prev => prev + 1);
+        });
+
+        // Listen for notification responses (when user taps notification)
+        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+          if (!isMounted) return;
+          
+          const notificationId = response.notification.request.identifier;
+          markAsRead(notificationId);
+          
+          // Handle navigation based on notification type
+          const type = response.notification.request.content.data?.type;
+          handleNotificationNavigation(type, response.notification.request.content.data);
+        });
+
+        // Load existing notifications from storage
+        loadNotifications();
+      } catch (error) {
+        console.error("Error initializing notifications:", error);
       }
-    });
+    };
 
-    // Listen for incoming notifications
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      const notificationData: NotificationData = {
-        id: notification.request.identifier,
-        title: notification.request.content.title || '',
-        body: notification.request.content.body || '',
-        type: notification.request.content.data?.type || 'message',
-        data: notification.request.content.data,
-        timestamp: Date.now(),
-        read: false,
-      };
-      
-      setNotifications(prev => [notificationData, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
-
-    // Listen for notification responses (when user taps notification)
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      const notificationId = response.notification.request.identifier;
-      markAsRead(notificationId);
-      
-      // Handle navigation based on notification type
-      const type = response.notification.request.content.data?.type;
-      handleNotificationNavigation(type, response.notification.request.content.data);
-    });
-
-    // Load existing notifications from storage
-    loadNotifications();
+    initializeNotifications();
 
     return () => {
+      isMounted = false;
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
       }
