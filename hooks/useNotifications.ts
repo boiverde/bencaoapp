@@ -28,20 +28,21 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
+    isMounted.current = true;
     
     const initializeNotifications = async () => {
       try {
         const token = await registerForPushNotificationsAsync();
-        if (token && isMounted) {
+        if (token && isMounted.current) {
           setExpoPushToken(token);
         }
         
         // Listen for incoming notifications
         notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-          if (!isMounted) return;
+          if (!isMounted.current) return;
           
           const notificationData: NotificationData = {
             id: notification.request.identifier,
@@ -59,7 +60,7 @@ export function useNotifications() {
 
         // Listen for notification responses (when user taps notification)
         responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-          if (!isMounted) return;
+          if (!isMounted.current) return;
           
           const notificationId = response.notification.request.identifier;
           markAsRead(notificationId);
@@ -79,7 +80,7 @@ export function useNotifications() {
     initializeNotifications();
 
     return () => {
-      isMounted = false;
+      isMounted.current = false;
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
       }
@@ -162,8 +163,10 @@ export function useNotifications() {
       },
     ];
     
-    setNotifications(mockNotifications);
-    setUnreadCount(mockNotifications.filter(n => !n.read).length);
+    if (isMounted.current) {
+      setNotifications(mockNotifications);
+      setUnreadCount(mockNotifications.filter(n => !n.read).length);
+    }
   };
 
   const handleNotificationNavigation = (type: string, data: any) => {
@@ -189,36 +192,44 @@ export function useNotifications() {
   };
 
   const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    if (isMounted.current) {
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    }
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
-    setUnreadCount(0);
+    if (isMounted.current) {
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true }))
+      );
+      setUnreadCount(0);
+    }
   };
 
   const deleteNotification = (notificationId: string) => {
-    setNotifications(prev => {
-      const notification = prev.find(n => n.id === notificationId);
-      if (notification && !notification.read) {
-        setUnreadCount(count => Math.max(0, count - 1));
-      }
-      return prev.filter(n => n.id !== notificationId);
-    });
+    if (isMounted.current) {
+      setNotifications(prev => {
+        const notification = prev.find(n => n.id === notificationId);
+        if (notification && !notification.read) {
+          setUnreadCount(count => Math.max(0, count - 1));
+        }
+        return prev.filter(n => n.id !== notificationId);
+      });
+    }
   };
 
   const clearAllNotifications = () => {
-    setNotifications([]);
-    setUnreadCount(0);
+    if (isMounted.current) {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
   };
 
   // Predefined notification templates

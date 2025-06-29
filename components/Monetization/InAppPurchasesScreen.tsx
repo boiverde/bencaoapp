@@ -16,7 +16,8 @@ import {
   Shield, 
   Star, 
   Gift, 
-  Info 
+  Info,
+  Clock
 } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useMonetization } from '@/hooks/useMonetization';
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
+    borderRadius: Theme.spacing.md,
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: Theme.spacing.sm,
     marginRight: Theme.spacing.sm,

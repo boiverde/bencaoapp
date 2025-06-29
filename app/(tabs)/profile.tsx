@@ -8,6 +8,7 @@ import { useGamification } from '@/hooks/useGamification';
 import { useSecurity } from '@/hooks/useSecurity';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useSocial } from '@/hooks/useSocial';
+import { useMonetization } from '@/hooks/useMonetization';
 import LevelProgressCard from '@/components/UI/LevelProgressCard';
 import AchievementCard from '@/components/UI/AchievementCard';
 import ChallengeCard from '@/components/UI/ChallengeCard';
@@ -19,6 +20,8 @@ import SocialFeed from '@/components/Social/SocialFeed';
 import SocialProfileHeader from '@/components/Social/SocialProfileHeader';
 import SocialGroupCard from '@/components/Social/SocialGroupCard';
 import SocialEventCard from '@/components/Social/SocialEventCard';
+import SubscriptionBanner from '@/components/Monetization/SubscriptionBanner';
+import RevenueCatInfo from '@/components/Monetization/RevenueCatInfo';
 
 // Mock user data
 const USER = {
@@ -41,7 +44,7 @@ const USER = {
 };
 
 export default function ProfileScreen() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security' | 'analytics' | 'insights' | 'social'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'security' | 'analytics' | 'insights' | 'social' | 'subscription'>('overview');
   const [socialSubTab, setSocialSubTab] = useState<'posts' | 'groups' | 'events'>('posts');
   
   const {
@@ -71,6 +74,10 @@ export default function ProfileScreen() {
     getUserGroups,
     getUserEvents
   } = useSocial();
+  
+  const {
+    isSubscribed
+  } = useMonetization();
 
   const currentLevel = getCurrentLevel();
   const unlockedAchievements = getUnlockedAchievements();
@@ -82,12 +89,18 @@ export default function ProfileScreen() {
   const unreadInsightsCount = getUnreadInsightsCount();
   const userGroups = getUserGroups();
   const userEvents = getUserEvents();
+  
+  const handleSubscriptionPress = () => {
+    setActiveTab('subscription');
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
         return (
           <View>
+            <SubscriptionBanner onPress={handleSubscriptionPress} compact />
+            
             <LevelProgressCard
               currentLevel={currentLevel}
               nextLevel={nextLevel}
@@ -357,6 +370,30 @@ export default function ProfileScreen() {
             )}
           </View>
         );
+        
+      case 'subscription':
+        return (
+          <View style={styles.subscriptionContainer}>
+            <Text style={styles.subscriptionTitle}>Assinaturas e Compras</Text>
+            
+            {isSubscribed() ? (
+              <View style={styles.activeSubscriptionContainer}>
+                <Text style={styles.activeSubscriptionTitle}>Assinatura Ativa</Text>
+                <Text style={styles.activeSubscriptionDetails}>
+                  Você tem uma assinatura ativa do Plano Abençoado.
+                </Text>
+                
+                <TouchableOpacity style={styles.manageSubscriptionButton}>
+                  <Text style={styles.manageSubscriptionText}>Gerenciar Assinatura</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <SubscriptionBanner onPress={() => {}} />
+            )}
+            
+            <RevenueCatInfo />
+          </View>
+        );
 
       default:
         return null;
@@ -470,6 +507,14 @@ export default function ProfileScreen() {
             >
               <Text style={[styles.tabText, activeTab === 'social' && styles.activeTabText]}>
                 Social
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'subscription' && styles.activeTab]}
+              onPress={() => setActiveTab('subscription')}
+            >
+              <Text style={[styles.tabText, activeTab === 'subscription' && styles.activeTabText]}>
+                Assinatura
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -695,12 +740,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: Theme.spacing.xs,
+    paddingHorizontal: 3,
   },
   tabBadgeText: {
     fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: 10,
+    fontSize: 8,
     color: Theme.colors.background.white,
-    paddingHorizontal: 2,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -976,5 +1021,45 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.text.medium,
     textAlign: 'center',
+  },
+  subscriptionContainer: {
+    padding: Theme.spacing.md,
+  },
+  subscriptionTitle: {
+    fontFamily: Theme.typography.fontFamily.heading,
+    fontSize: Theme.typography.fontSize.xl,
+    color: Theme.colors.text.dark,
+    marginBottom: Theme.spacing.lg,
+  },
+  activeSubscriptionContainer: {
+    backgroundColor: Theme.colors.background.white,
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.lg,
+    marginBottom: Theme.spacing.lg,
+    ...Theme.shadows.medium,
+  },
+  activeSubscriptionTitle: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.lg,
+    color: Theme.colors.primary.gold,
+    marginBottom: Theme.spacing.md,
+  },
+  activeSubscriptionDetails: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+    marginBottom: Theme.spacing.lg,
+    lineHeight: 22,
+  },
+  manageSubscriptionButton: {
+    backgroundColor: Theme.colors.primary.blue,
+    borderRadius: Theme.borderRadius.md,
+    paddingVertical: Theme.spacing.md,
+    alignItems: 'center',
+  },
+  manageSubscriptionText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.background.white,
   },
 });
