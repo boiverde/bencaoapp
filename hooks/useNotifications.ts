@@ -40,35 +40,38 @@ export function useNotifications() {
           setExpoPushToken(token);
         }
         
-        // Listen for incoming notifications
-        notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-          if (!isMounted.current) return;
-          
-          const notificationData: NotificationData = {
-            id: notification.request.identifier,
-            title: notification.request.content.title || '',
-            body: notification.request.content.body || '',
-            type: notification.request.content.data?.type || 'message',
-            data: notification.request.content.data,
-            timestamp: Date.now(),
-            read: false,
-          };
-          
-          setNotifications(prev => [notificationData, ...prev]);
-          setUnreadCount(prev => prev + 1);
-        });
+        // Only set up listeners on non-web platforms
+        if (Platform.OS !== 'web') {
+          // Listen for incoming notifications
+          notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+            if (!isMounted.current) return;
+            
+            const notificationData: NotificationData = {
+              id: notification.request.identifier,
+              title: notification.request.content.title || '',
+              body: notification.request.content.body || '',
+              type: notification.request.content.data?.type || 'message',
+              data: notification.request.content.data,
+              timestamp: Date.now(),
+              read: false,
+            };
+            
+            setNotifications(prev => [notificationData, ...prev]);
+            setUnreadCount(prev => prev + 1);
+          });
 
-        // Listen for notification responses (when user taps notification)
-        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-          if (!isMounted.current) return;
-          
-          const notificationId = response.notification.request.identifier;
-          markAsRead(notificationId);
-          
-          // Handle navigation based on notification type
-          const type = response.notification.request.content.data?.type;
-          handleNotificationNavigation(type, response.notification.request.content.data);
-        });
+          // Listen for notification responses (when user taps notification)
+          responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+            if (!isMounted.current) return;
+            
+            const notificationId = response.notification.request.identifier;
+            markAsRead(notificationId);
+            
+            // Handle navigation based on notification type
+            const type = response.notification.request.content.data?.type;
+            handleNotificationNavigation(type, response.notification.request.content.data);
+          });
+        }
 
         // Load existing notifications from storage
         loadNotifications();
@@ -180,15 +183,42 @@ export function useNotifications() {
     type: NotificationData['type'],
     data?: any
   ) => {
-    await Notifications.scheduleNotificationAsync({
-      content: {
+    // Only send actual notifications on non-web platforms
+    if (Platform.OS !== 'web') {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          data: { type, ...data },
+          sound: 'default',
+        },
+        trigger: null, // Send immediately
+      });
+    } else {
+      // For web, we can simulate the notification by adding it directly to the state
+      const notificationData: NotificationData = {
+        id: Date.now().toString(),
         title,
         body,
-        data: { type, ...data },
-        sound: Platform.OS === 'web' ? undefined : 'default',
-      },
-      trigger: null, // Send immediately
-    });
+        type,
+        data,
+        timestamp: Date.now(),
+        read: false,
+      };
+      
+      if (isMounted.current) {
+        setNotifications(prev => [notificationData, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      }
+      
+      // Optionally show a browser notification if permission is granted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+          body,
+          icon: '/favicon.png', // You can customize this
+        });
+      }
+    }
   };
 
   const markAsRead = (notificationId: string) => {
