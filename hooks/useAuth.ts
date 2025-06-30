@@ -22,6 +22,7 @@ export interface AuthState {
 
 const AUTH_STORAGE_KEY = 'auth_user';
 const TOKEN_STORAGE_KEY = 'auth_token';
+const IS_ADMIN_KEY = 'is_admin_user';
 
 export function useAuth() {
   const [authState, setAuthState] = useGlobalState<AuthState>('auth', {
@@ -113,6 +114,7 @@ export function useAuth() {
         // Save user data and token
         await SecureStorage.saveItem(AUTH_STORAGE_KEY, JSON.stringify(mockUser));
         await SecureStorage.saveItem(TOKEN_STORAGE_KEY, mockToken);
+        await SecureStorage.saveItem(IS_ADMIN_KEY, 'false');
         
         setAuthState({
           user: mockUser,
@@ -140,6 +142,53 @@ export function useAuth() {
       return false;
     }
   }, [authState, setAuthState]);
+
+  const signInAsAdmin = useCallback(async (isAdmin: boolean): Promise<boolean> => {
+    try {
+      // Set admin status in secure storage
+      await SecureStorage.saveItem(IS_ADMIN_KEY, isAdmin ? 'true' : 'false');
+      
+      // Update auth state to authenticated
+      if (isAdmin) {
+        const mockAdminUser: User = {
+          id: 'admin_1',
+          email: 'aguiar.neves@hotmail.com',
+          name: 'Administrador',
+          emailVerified: true,
+          phoneVerified: true,
+          createdAt: Date.now() - (365 * 24 * 60 * 60 * 1000) // 1 year ago
+        };
+        
+        const mockToken = 'mock_admin_token_' + Date.now();
+        
+        // Save admin user data and token
+        await SecureStorage.saveItem(AUTH_STORAGE_KEY, JSON.stringify(mockAdminUser));
+        await SecureStorage.saveItem(TOKEN_STORAGE_KEY, mockToken);
+        
+        setAuthState({
+          user: mockAdminUser,
+          isLoading: false,
+          isAuthenticated: true,
+          error: null
+        });
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error setting admin status:', error);
+      return false;
+    }
+  }, [setAuthState]);
+
+  const isUserAdmin = useCallback(async (): Promise<boolean> => {
+    try {
+      const isAdmin = await SecureStorage.getItem(IS_ADMIN_KEY);
+      return isAdmin === 'true';
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+  }, []);
 
   const signUp = useCallback(async (
     email: string, 
@@ -174,6 +223,7 @@ export function useAuth() {
       // Save user data and token
       await SecureStorage.saveItem(AUTH_STORAGE_KEY, JSON.stringify(mockUser));
       await SecureStorage.saveItem(TOKEN_STORAGE_KEY, mockToken);
+      await SecureStorage.saveItem(IS_ADMIN_KEY, 'false');
       
       setAuthState({
         user: mockUser,
@@ -199,6 +249,7 @@ export function useAuth() {
       // Clear auth data
       await SecureStorage.deleteItem(AUTH_STORAGE_KEY);
       await SecureStorage.deleteItem(TOKEN_STORAGE_KEY);
+      await SecureStorage.deleteItem(IS_ADMIN_KEY);
       
       setAuthState({
         user: null,
@@ -353,6 +404,8 @@ export function useAuth() {
     isAuthenticated: authState.isAuthenticated,
     error: authState.error,
     signIn,
+    signInAsAdmin,
+    isUserAdmin,
     signUp,
     signOut,
     updateUser,

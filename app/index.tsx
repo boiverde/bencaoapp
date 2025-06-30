@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, Animated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import Theme from '@/constants/Theme';
 import { Heart, Sparkles } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const sparkleAnim = useRef(new Animated.Value(0)).current;
@@ -54,6 +54,16 @@ export default function SplashScreen() {
 
     return () => clearTimeout(timer);
   }, [fadeAnim, scaleAnim, sparkleAnim, router, isAuthenticated]);
+
+  // If auth is still loading, show the splash screen
+  if (isLoading) {
+    return null;
+  }
+
+  // If auth is already determined, redirect immediately
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   return (
     <View style={styles.container}>

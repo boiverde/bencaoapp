@@ -6,6 +6,7 @@ import Theme from '@/constants/Theme';
 import { useRouter } from 'expo-router';
 import { Mail, Lock, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
 import { AdminAuth } from '@/utils/adminAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AdminLoginScreen() {
   const [email, setEmail] = useState('');
@@ -15,6 +16,7 @@ export default function AdminLoginScreen() {
   const [error, setError] = useState<string | null>(null);
   
   const router = useRouter();
+  const { signInAsAdmin } = useAuth();
 
   useEffect(() => {
     // Initialize admin credentials
@@ -34,8 +36,11 @@ export default function AdminLoginScreen() {
       const isAdmin = await AdminAuth.verifyAdminCredentials(email, password);
       
       if (isAdmin) {
-        // Navigate to admin dashboard or main app
-        router.replace('/(tabs)');
+        // Set admin status
+        await signInAsAdmin(true);
+        
+        // Navigate to admin dashboard
+        router.replace('/(tabs)/admin-dashboard');
         Alert.alert('Sucesso', 'Login de administrador realizado com sucesso!');
       } else {
         setError('Credenciais de administrador inválidas');
