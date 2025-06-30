@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback, useMemo } from 'react';
 import { StyleSheet, View, Text, Image, Animated, PanResponder } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -184,7 +184,7 @@ export default function DiscoverScreen() {
     extrapolate: 'clamp',
   });
 
-  const panResponder = PanResponder.create({
+  const panResponder = useMemo(() => PanResponder.create({
     onMoveShouldSetPanResponder: () => true,
     onPanResponderMove: (_, gesture) => {
       swipe.setValue({ x: gesture.dx, y: gesture.dy });
@@ -222,9 +222,9 @@ export default function DiscoverScreen() {
         }).start();
       }
     },
-  });
+  }), [swipe, currentIndex, sendMatchNotification, handleConnectionMade]);
 
-  const handleLike = () => {
+  const handleLike = useCallback(() => {
     Animated.spring(swipe, {
       toValue: { x: 500, y: 0 },
       useNativeDriver: true,
@@ -238,9 +238,9 @@ export default function DiscoverScreen() {
       setCurrentIndex(prevIndex => prevIndex + 1);
       swipe.setValue({ x: 0, y: 0 });
     });
-  };
+  }, [swipe, currentIndex, sendMatchNotification, handleConnectionMade]);
 
-  const handlePass = () => {
+  const handlePass = useCallback(() => {
     Animated.spring(swipe, {
       toValue: { x: -500, y: 0 },
       useNativeDriver: true,
@@ -248,14 +248,19 @@ export default function DiscoverScreen() {
       setCurrentIndex(prevIndex => prevIndex + 1);
       swipe.setValue({ x: 0, y: 0 });
     });
-  };
+  }, [swipe]);
 
-  const handleFollow = () => {
+  const handleFollow = useCallback(() => {
     // Here you would implement the follow functionality
     // For now, we'll just show a visual feedback
     const profile = PROFILES[currentIndex];
     console.log(`Following ${profile.name}`);
-  };
+  }, [currentIndex]);
+
+  const compatibilityScore = useMemo(() => {
+    if (currentIndex >= PROFILES.length) return null;
+    return CompatibilityAlgorithm.calculateCompatibility(CURRENT_USER, PROFILES[currentIndex]);
+  }, [currentIndex]);
 
   if (currentIndex >= PROFILES.length) {
     return (
@@ -286,7 +291,6 @@ export default function DiscoverScreen() {
   }
 
   const profile = PROFILES[currentIndex];
-  const compatibilityScore = CompatibilityAlgorithm.calculateCompatibility(CURRENT_USER, profile);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -298,7 +302,7 @@ export default function DiscoverScreen() {
             onPress={() => setShowCompatibility(!showCompatibility)}
           >
             <Target size={16} color={Theme.colors.primary.blue} />
-            <Text style={styles.pointsText}>{compatibilityScore.overall}%</Text>
+            <Text style={styles.pointsText}>{compatibilityScore?.overall}%</Text>
           </TouchableOpacity>
           <View style={styles.levelBadge}>
             <Trophy size={16} color={Theme.colors.primary.gold} />
@@ -311,7 +315,7 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
-      {showCompatibility && (
+      {showCompatibility && compatibilityScore && (
         <View style={styles.compatibilityContainer}>
           <CompatibilityDisplay 
             score={compatibilityScore} 
@@ -334,7 +338,11 @@ export default function DiscoverScreen() {
             }
           ]}
         >
-          <Image source={{ uri: profile.image }} style={styles.image} />
+          <Image 
+            source={{ uri: profile.image }} 
+            style={styles.image}
+            loading="lazy"
+          />
           
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.8)']}

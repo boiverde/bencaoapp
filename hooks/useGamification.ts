@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Achievement, 
   Level, 
@@ -30,7 +30,6 @@ export function useGamification() {
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
   const [dailyChallenge, setDailyChallenge] = useState<Challenge | null>(null);
   const [levelProgress, setLevelProgress] = useState(0);
-  const [nextLevel, setNextLevel] = useState<Level | null>(null);
   
   const { sendLocalNotification } = useNotifications();
 
@@ -82,12 +81,9 @@ export function useGamification() {
       userStats.currentLevel
     );
     setLevelProgress(progress);
-    
-    const next = GamificationSystem.getNextLevel(userStats.currentLevel);
-    setNextLevel(next);
   };
 
-  const addPoints = (action: string, value: number = 1) => {
+  const addPoints = useCallback((action: string, value: number = 1) => {
     const points = GamificationSystem.calculatePoints(action, value);
     const newTotalPoints = userStats.totalPoints + points;
     
@@ -144,9 +140,9 @@ export function useGamification() {
     }
 
     return { points, leveledUp, newAchievements };
-  };
+  }, [userStats, sendLocalNotification]);
 
-  const updateStreak = (type: 'prayer' | 'reading' | 'community', increment: boolean = true) => {
+  const updateStreak = useCallback((type: 'prayer' | 'reading' | 'community', increment: boolean = true) => {
     setUserStats(prev => ({
       ...prev,
       streaks: {
@@ -154,18 +150,18 @@ export function useGamification() {
         [type]: increment ? prev.streaks[type] + 1 : 0
       }
     }));
-  };
+  }, []);
 
-  const updateStat = (stat: keyof UserStats, value: number) => {
+  const updateStat = useCallback((stat: keyof UserStats, value: number) => {
     if (typeof userStats[stat] === 'number') {
       setUserStats(prev => ({
         ...prev,
         [stat]: (prev[stat] as number) + value
       }));
     }
-  };
+  }, [userStats]);
 
-  const completeChallenge = (challengeId: string) => {
+  const completeChallenge = useCallback((challengeId: string) => {
     const challenge = activeChallenge || dailyChallenge;
     if (!challenge || challenge.id !== challengeId) return false;
 
@@ -197,9 +193,9 @@ export function useGamification() {
     );
 
     return true;
-  };
+  }, [activeChallenge, dailyChallenge, addPoints, sendLocalNotification]);
 
-  const updateChallengeProgress = (challengeId: string, taskId: string, progress: number) => {
+  const updateChallengeProgress = useCallback((challengeId: string, taskId: string, progress: number) => {
     const completed = GamificationSystem.updateChallengeProgress(challengeId, taskId, progress);
     
     if (completed) {
@@ -215,31 +211,35 @@ export function useGamification() {
     }
 
     return completed;
-  };
+  }, [activeChallenge, dailyChallenge, completeChallenge]);
 
-  const getCurrentLevel = (): Level => {
+  const getCurrentLevel = useCallback((): Level => {
     return GamificationSystem.getLevelByPoints(userStats.totalPoints);
-  };
+  }, [userStats.totalPoints]);
 
-  const getAchievementsByCategory = (category: Achievement['category']) => {
+  const getNextLevel = useCallback((currentLevel: number): Level | null => {
+    return GamificationSystem.getNextLevel(currentLevel);
+  }, []);
+
+  const getAchievementsByCategory = useCallback((category: Achievement['category']) => {
     return GamificationSystem.getAchievementsByCategory(category);
-  };
+  }, []);
 
-  const getUnlockedAchievements = () => {
+  const getUnlockedAchievements = useMemo(() => {
     const allAchievements = GamificationSystem.getAllAchievements();
     return allAchievements.filter(achievement => 
       userStats.achievements.includes(achievement.id)
     );
-  };
+  }, [userStats.achievements]);
 
-  const getLockedAchievements = () => {
+  const getLockedAchievements = useMemo(() => {
     const allAchievements = GamificationSystem.getAllAchievements();
     return allAchievements.filter(achievement => 
       !userStats.achievements.includes(achievement.id)
     );
-  };
+  }, [userStats.achievements]);
 
-  const getAchievementProgress = (achievementId: string): number => {
+  const getAchievementProgress = useCallback((achievementId: string): number => {
     const achievement = GamificationSystem.getAllAchievements().find(a => a.id === achievementId);
     if (!achievement) return 0;
 
@@ -255,47 +255,47 @@ export function useGamification() {
       default:
         return userStats.achievements.includes(achievementId) ? 100 : 0;
     }
-  };
+  }, [userStats]);
 
-  const setCurrentTitle = (title: string) => {
+  const setCurrentTitle = useCallback((title: string) => {
     if (userStats.titles.includes(title)) {
       setUserStats(prev => ({
         ...prev,
         currentTitle: title
       }));
     }
-  };
+  }, [userStats.titles]);
 
   // Action handlers for different activities
-  const handlePrayerComplete = (minutes: number) => {
+  const handlePrayerComplete = useCallback((minutes: number) => {
     updateStat('prayerMinutes', minutes);
     updateStreak('prayer');
     return addPoints('prayer_minute', minutes);
-  };
+  }, [updateStat, updateStreak, addPoints]);
 
-  const handleVerseRead = () => {
+  const handleVerseRead = useCallback(() => {
     updateStat('versesRead', 1);
     updateStreak('reading');
     return addPoints('verse_read');
-  };
+  }, [updateStat, updateStreak, addPoints]);
 
-  const handleCommunityPrayer = () => {
+  const handleCommunityPrayer = useCallback(() => {
     updateStat('connectionsHelped', 1);
     updateStreak('community');
     return addPoints('community_prayer');
-  };
+  }, [updateStat, updateStreak, addPoints]);
 
-  const handleConnectionMade = () => {
+  const handleConnectionMade = useCallback(() => {
     return addPoints('connection_made');
-  };
+  }, [addPoints]);
 
-  const handleEventAttend = () => {
+  const handleEventAttend = useCallback(() => {
     return addPoints('event_attend');
-  };
+  }, [addPoints]);
 
-  const handleTestimonyShare = () => {
+  const handleTestimonyShare = useCallback(() => {
     return addPoints('testimony_share');
-  };
+  }, [addPoints]);
 
   return {
     // State
@@ -304,10 +304,10 @@ export function useGamification() {
     activeChallenge,
     dailyChallenge,
     levelProgress,
-    nextLevel,
-
+    
     // Level functions
     getCurrentLevel,
+    getNextLevel,
     
     // Achievement functions
     getAchievementsByCategory,

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { StyleSheet, View, Text, Animated } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { StyleSheet, View, Text, Animated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Theme from '@/constants/Theme';
@@ -7,9 +7,9 @@ import { Heart, Sparkles } from 'lucide-react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const fadeAnim = new Animated.Value(0);
-  const scaleAnim = new Animated.Value(0.8);
-  const sparkleAnim = new Animated.Value(0);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const sparkleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Start animations
@@ -47,7 +47,7 @@ export default function SplashScreen() {
     }, 4000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [fadeAnim, scaleAnim, sparkleAnim, router]);
 
   return (
     <View style={styles.container}>
@@ -88,16 +88,18 @@ export default function SplashScreen() {
           <Text style={styles.appName}>Bênção Match</Text>
           <Text style={styles.tagline}>Conexões abençoadas</Text>
           
-          <Animated.View 
-            style={[
-              styles.sparklesContainer,
-              { opacity: sparkleAnim }
-            ]}
-          >
-            <Sparkles size={24} color={Theme.colors.background.white} style={styles.sparkle1} />
-            <Sparkles size={18} color={Theme.colors.primary.gold} style={styles.sparkle2} />
-            <Sparkles size={20} color={Theme.colors.background.white} style={styles.sparkle3} />
-          </Animated.View>
+          {Platform.OS !== 'web' && (
+            <Animated.View 
+              style={[
+                styles.sparklesContainer,
+                { opacity: sparkleAnim }
+              ]}
+            >
+              <Sparkles size={24} color={Theme.colors.background.white} style={styles.sparkle1} />
+              <Sparkles size={18} color={Theme.colors.primary.gold} style={styles.sparkle2} />
+              <Sparkles size={20} color={Theme.colors.background.white} style={styles.sparkle3} />
+            </Animated.View>
+          )}
         </View>
         
         <View style={styles.verseContainer}>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -75,7 +75,7 @@ export default function ChatScreen() {
     }
   }, [messages.length]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (messageText.trim()) {
       const content = messageText.trim();
       setMessageText('');
@@ -96,9 +96,9 @@ export default function ChatScreen() {
         Alert.alert('Erro', 'Não foi possível enviar a mensagem. Tente novamente.');
       }
     }
-  };
+  }, [messageText, conversationId, sendMessage, stopTyping, sendMessageNotification]);
 
-  const handleTextChange = (text: string) => {
+  const handleTextChange = useCallback((text: string) => {
     setMessageText(text);
     
     if (text.length > 0 && !isTyping) {
@@ -116,18 +116,18 @@ export default function ChatScreen() {
       setIsTyping(false);
       stopTyping(conversationId);
     }, 1000);
-  };
+  }, [isTyping, conversationId, startTyping, stopTyping]);
 
-  const handleSendVerse = async (category?: string) => {
+  const handleSendVerse = useCallback(async (category?: string) => {
     try {
       await sendVerse(conversationId, category);
       setShowSpiritualOptions(false);
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível enviar o versículo.');
     }
-  };
+  }, [conversationId, sendVerse]);
 
-  const handleCreatePrayerRequest = () => {
+  const handleCreatePrayerRequest = useCallback(() => {
     Alert.prompt(
       'Pedido de Oração',
       'Descreva seu pedido de oração:',
@@ -161,21 +161,21 @@ export default function ChatScreen() {
       ],
       'plain-text'
     );
-  };
+  }, [conversationId, createPrayerRequest, sendMessage]);
 
-  const handleVoiceCall = () => {
+  const handleVoiceCall = useCallback(() => {
     startVoiceCall(conversationId, 'voice');
-  };
+  }, [conversationId, startVoiceCall]);
 
-  const handleVideoCall = () => {
+  const handleVideoCall = useCallback(() => {
     startVoiceCall(conversationId, 'video');
-  };
+  }, [conversationId, startVoiceCall]);
 
-  const handlePrayerCall = () => {
+  const handlePrayerCall = useCallback(() => {
     startVoiceCall(conversationId, 'voice', true);
-  };
+  }, [conversationId, startVoiceCall]);
 
-  const renderMessage = ({ item, index }) => {
+  const renderMessage = useCallback(({ item, index }) => {
     const isOwn = item.senderId === 'current_user';
     const showAvatar = !isOwn && (index === 0 || messages[index - 1]?.senderId !== item.senderId);
     
@@ -190,7 +190,7 @@ export default function ChatScreen() {
         onTranslate={translateMessage}
       />
     );
-  };
+  }, [messages, addReaction, editMessage, deleteMessage, translateMessage]);
 
   const renderSpiritualOptions = () => (
     <View style={styles.spiritualOptions}>
@@ -286,6 +286,9 @@ export default function ChatScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messagesList}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={10}
       />
       
       {showSpiritualOptions && renderSpiritualOptions()}
