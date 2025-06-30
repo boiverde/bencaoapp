@@ -3,20 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Switch, Alert } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Theme from '@/constants/Theme';
-import { 
-  Settings as SettingsIcon, 
-  ChevronLeft, 
-  Bell, 
-  Shield, 
-  Eye, 
-  Globe, 
-  Moon, 
-  Volume2, 
-  Smartphone, 
-  HelpCircle, 
-  LogOut,
-  ChevronRight
-} from 'lucide-react-native';
+import { Settings as SettingsIcon, ChevronLeft, Bell, Shield, Eye, Globe, Moon, Volume2, Smartphone, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import LanguageSwitcher from '@/components/UI/LanguageSwitcher';
 import AccessibilitySettings from '@/components/UI/AccessibilitySettings';

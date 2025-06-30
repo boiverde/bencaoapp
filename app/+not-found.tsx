@@ -1,7 +1,7 @@
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Theme from '@/constants/Theme';
-import { Home, RefreshCw } from 'lucide-react-native';
+import { Chrome as Home, RefreshCw } from 'lucide-react-native';
 import { useTranslation } from '@/utils/i18n';
 
 export default function NotFoundScreen() {

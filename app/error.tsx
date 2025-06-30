@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import Theme from '@/constants/Theme';
-import { RefreshCw, Home, AlertTriangle } from 'lucide-react-native';
+import { RefreshCw, Chrome as Home, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import { useTranslation } from '@/utils/i18n';
 
 export default function ErrorScreen(props: { error: Error; reset: () => void }) {

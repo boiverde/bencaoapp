@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Switch, TouchableOpacity, ScrollView } from 'react-native';
-import { Eye, Volume2, Vibration, Clock, Moon, Zap } from 'lucide-react-native';
+import { Eye, Volume2, Vibrate as Vibration, Clock, Moon, Zap } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
 import { useGlobalState } from '@/utils/stateManager';
 import { useTranslation } from '@/utils/i18n';
