@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TextInput, FlatList } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput, FlatList as RNFlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
 import { Search, Filter, Bell, Users, Calendar, Book, Heart } from 'lucide-react-native';
@@ -48,7 +48,7 @@ export default function CommunityScreen() {
       
       case 'groups':
         return (
-          <FlatList
+          <RNFlatList
             data={groups}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
@@ -73,7 +73,7 @@ export default function CommunityScreen() {
       
       case 'events':
         return (
-          <FlatList
+          <RNFlatList
             data={events}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (

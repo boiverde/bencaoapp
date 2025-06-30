@@ -54,8 +54,7 @@ export default function ProfileScreen() {
     getLockedAchievements,
     activeChallenge,
     dailyChallenge,
-    levelProgress,
-    nextLevel
+    levelProgress
   } = useGamification();
 
   const {
@@ -92,6 +91,9 @@ export default function ProfileScreen() {
   const userGroups = getUserGroups();
   const userEvents = getUserEvents();
   
+  // Get the next level from the useGamification hook
+  const nextLevelData = useGamification().getNextLevel(currentLevel.level);
+  
   const handleSubscriptionPress = () => {
     setActiveTab('subscription');
   };
@@ -105,7 +107,7 @@ export default function ProfileScreen() {
             
             <LevelProgressCard
               currentLevel={currentLevel}
-              nextLevel={nextLevel}
+              nextLevel={nextLevelData}
               progress={levelProgress}
               totalPoints={userStats.totalPoints}
             />

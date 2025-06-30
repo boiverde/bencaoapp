@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  ScrollView
+  ScrollView as RNScrollView
 } from 'react-native';
 import { 
   Filter, 
@@ -161,13 +161,13 @@ export default function SocialFeed({
 
       {showFilters && (
         <View style={styles.filtersContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <RNScrollView horizontal showsHorizontalScrollIndicator={false}>
             {renderFilterButton('all', 'Todos', MessageSquare)}
             {renderFilterButton('prayer', 'Orações', PrayingHands)}
             {renderFilterButton('verse', 'Versículos', Book)}
             {renderFilterButton('testimony', 'Testemunhos', MessageSquare)}
             {renderFilterButton('event', 'Eventos', Calendar)}
-          </ScrollView>
+          </RNScrollView>
         </View>
       )}
 

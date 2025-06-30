@@ -14,13 +14,15 @@ export interface NotificationData {
 }
 
 // Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+}
 
 export function useNotifications() {
   const [expoPushToken, setExpoPushToken] = useState<string>('');
@@ -84,10 +86,10 @@ export function useNotifications() {
 
     return () => {
       isMounted.current = false;
-      if (notificationListener.current) {
+      if (notificationListener.current && Platform.OS !== 'web') {
         Notifications.removeNotificationSubscription(notificationListener.current);
       }
-      if (responseListener.current) {
+      if (responseListener.current && Platform.OS !== 'web') {
         Notifications.removeNotificationSubscription(responseListener.current);
       }
     };
