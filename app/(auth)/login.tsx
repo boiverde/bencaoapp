@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link, useRouter } from 'expo-router';
-import { Mail, Lock, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { Performance } from '@/utils/performance';
 
@@ -15,7 +15,7 @@ export default function LoginScreen() {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   
-  const { signIn, isLoading, error } = useAuth();
+  const { signIn, isLoading, error, isAuthenticated } = useAuth();
   const router = useRouter();
 
   // Debounced validation functions
@@ -68,9 +68,11 @@ export default function LoginScreen() {
     setShowPassword(!showPassword);
   };
 
-  const navigateToAdminLogin = () => {
-    router.push('/admin-login');
-  };
+  // If already authenticated, redirect to tabs
+  if (isAuthenticated) {
+    router.replace('/(tabs)');
+    return null;
+  }
 
   return (
     <KeyboardAvoidingView 
@@ -149,13 +151,15 @@ export default function LoginScreen() {
           </View>
           {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
           
-          <TouchableOpacity 
-            style={styles.forgotPassword}
-            accessibilityLabel="Esqueceu a senha?"
-            accessibilityRole="button"
-          >
-            <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
-          </TouchableOpacity>
+          <Link href="/forgot-password" asChild>
+            <TouchableOpacity 
+              style={styles.forgotPassword}
+              accessibilityLabel="Esqueceu a senha?"
+              accessibilityRole="button"
+            >
+              <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+            </TouchableOpacity>
+          </Link>
           
           <TouchableOpacity 
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
@@ -202,16 +206,6 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </Link>
           </View>
-          
-          <TouchableOpacity 
-            style={styles.adminLoginButton}
-            onPress={navigateToAdminLogin}
-            accessibilityLabel="Acesso de Administrador"
-            accessibilityRole="button"
-          >
-            <ShieldCheck size={16} color={Theme.colors.primary.blue} />
-            <Text style={styles.adminLoginText}>Acesso de Administrador</Text>
-          </TouchableOpacity>
         </View>
         
         <Text style={styles.verseText}>"Quem encontra uma esposa encontra algo excelente; recebeu uma bênção do Senhor." Provérbios 18:22</Text>
@@ -365,7 +359,6 @@ const styles = StyleSheet.create({
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: Theme.spacing.md,
   },
   signupText: {
     fontFamily: Theme.typography.fontFamily.body,
@@ -376,18 +369,6 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.subheading,
     fontSize: Theme.typography.fontSize.sm,
     color: Theme.colors.primary.pink,
-    marginLeft: Theme.spacing.xs,
-  },
-  adminLoginButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Theme.spacing.sm,
-  },
-  adminLoginText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.xs,
-    color: Theme.colors.primary.blue,
     marginLeft: Theme.spacing.xs,
   },
   verseText: {
