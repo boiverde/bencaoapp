@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import Colors from '@/constants/Colors';
-import { Heart, MessageSquare, Calendar, User, Search, Users } from 'lucide-react-native';
+import { Heart, MessageSquare, Calendar, User, Search, Users, Shield } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { Redirect } from 'expo-router';
 
@@ -80,6 +80,16 @@ export default function TabLayout() {
             <User size={size} color={color} />
           ),
           tabBarAccessibilityLabel: "Meu perfil",
+        }}
+      />
+      <Tabs.Screen
+        name="admin-dashboard"
+        options={{
+          title: 'Admin',
+          tabBarIcon: ({ color, size }) => (
+            <Shield size={size} color={color} />
+          ),
+          tabBarAccessibilityLabel: "Painel de Administrador",
         }}
       />
     </Tabs>

@@ -1,66 +1,50 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Mail, Lock, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
-import { useAuth } from '@/hooks/useAuth';
-import { Performance } from '@/utils/performance';
+import { AdminAuth } from '@/utils/adminAuth';
 
-export default function LoginScreen() {
+export default function AdminLoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const { signIn, isLoading, error } = useAuth();
   const router = useRouter();
 
-  // Debounced validation functions
-  const validateEmail = Performance.debounce((text: string) => {
-    if (!text) {
-      setEmailError('Email é obrigatório');
-    } else if (!/\S+@\S+\.\S+/.test(text)) {
-      setEmailError('Email inválido');
-    } else {
-      setEmailError('');
-    }
-  }, 300);
-
-  const validatePassword = Performance.debounce((text: string) => {
-    if (!text) {
-      setPasswordError('Senha é obrigatória');
-    } else if (text.length < 6) {
-      setPasswordError('Senha deve ter pelo menos 6 caracteres');
-    } else {
-      setPasswordError('');
-    }
-  }, 300);
-
-  const handleEmailChange = (text: string) => {
-    setEmail(text);
-    validateEmail(text);
-  };
-
-  const handlePasswordChange = (text: string) => {
-    setPassword(text);
-    validatePassword(text);
-  };
+  useEffect(() => {
+    // Initialize admin credentials
+    AdminAuth.initializeAdminCredentials();
+  }, []);
 
   const handleLogin = async () => {
-    // Validate inputs
-    validateEmail(email);
-    validatePassword(password);
-    
-    if (!email || !password || emailError || passwordError) {
+    if (!email || !password) {
+      setError('Por favor, preencha todos os campos');
       return;
     }
     
-    const success = await signIn(email, password);
-    if (success) {
-      router.replace('/(tabs)');
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const isAdmin = await AdminAuth.verifyAdminCredentials(email, password);
+      
+      if (isAdmin) {
+        // Navigate to admin dashboard or main app
+        router.replace('/(tabs)');
+        Alert.alert('Sucesso', 'Login de administrador realizado com sucesso!');
+      } else {
+        setError('Credenciais de administrador inválidas');
+      }
+    } catch (error) {
+      console.error('Error during admin login:', error);
+      setError('Erro ao realizar login. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,8 +52,8 @@ export default function LoginScreen() {
     setShowPassword(!showPassword);
   };
 
-  const navigateToAdminLogin = () => {
-    router.push('/admin-login');
+  const handleBack = () => {
+    router.back();
   };
 
   return (
@@ -91,13 +75,14 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.logoContainer}>
+          <ShieldCheck size={60} color={Theme.colors.background.white} />
           <Text style={styles.logoText}>Bênção Match</Text>
-          <Text style={styles.logoSubtext}>Conexões abençoadas</Text>
+          <Text style={styles.logoSubtext}>Painel de Administrador</Text>
         </View>
         
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Bem-vindo de volta!</Text>
-          <Text style={styles.cardSubtitle}>Entre para encontrar sua conexão abençoada</Text>
+          <Text style={styles.cardTitle}>Acesso Administrativo</Text>
+          <Text style={styles.cardSubtitle}>Entre com suas credenciais de administrador</Text>
           
           {error && (
             <View style={styles.errorContainer}>
@@ -114,13 +99,12 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
-              onChangeText={handleEmailChange}
+              onChangeText={setEmail}
               editable={!isLoading}
               accessibilityLabel="Email"
-              accessibilityHint="Digite seu email de login"
+              accessibilityHint="Digite seu email de administrador"
             />
           </View>
-          {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
           
           <View style={styles.inputContainer}>
             <Lock size={20} color={Theme.colors.text.medium} />
@@ -130,10 +114,10 @@ export default function LoginScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry={!showPassword}
               value={password}
-              onChangeText={handlePasswordChange}
+              onChangeText={setPassword}
               editable={!isLoading}
               accessibilityLabel="Senha"
-              accessibilityHint="Digite sua senha"
+              accessibilityHint="Digite sua senha de administrador"
             />
             <TouchableOpacity 
               onPress={togglePasswordVisibility}
@@ -147,23 +131,14 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
           </View>
-          {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
-          
-          <TouchableOpacity 
-            style={styles.forgotPassword}
-            accessibilityLabel="Esqueceu a senha?"
-            accessibilityRole="button"
-          >
-            <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
-          </TouchableOpacity>
           
           <TouchableOpacity 
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
-            accessibilityLabel="Entrar"
+            accessibilityLabel="Entrar como administrador"
             accessibilityRole="button"
-            accessibilityHint="Toque para fazer login"
+            accessibilityHint="Toque para fazer login como administrador"
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="#fff" />
@@ -175,46 +150,17 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
           
-          <Text style={styles.orText}>ou entre com</Text>
-          
-          <View style={styles.socialButtonsContainer}>
-            <TouchableOpacity 
-              style={styles.socialButton}
-              accessibilityLabel="Entrar com Google"
-              accessibilityRole="button"
-            >
-              <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.socialButton}
-              accessibilityLabel="Entrar com Facebook"
-              accessibilityRole="button"
-            >
-              <Text style={styles.socialButtonText}>Facebook</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Não tem uma conta?</Text>
-            <Link href="/signup" asChild>
-              <TouchableOpacity accessibilityRole="link" accessibilityHint="Ir para a tela de cadastro">
-                <Text style={styles.signupLink}>Cadastre-se</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
-          
           <TouchableOpacity 
-            style={styles.adminLoginButton}
-            onPress={navigateToAdminLogin}
-            accessibilityLabel="Acesso de Administrador"
+            style={styles.backButton}
+            onPress={handleBack}
+            accessibilityLabel="Voltar para login normal"
             accessibilityRole="button"
           >
-            <ShieldCheck size={16} color={Theme.colors.primary.blue} />
-            <Text style={styles.adminLoginText}>Acesso de Administrador</Text>
+            <Text style={styles.backButtonText}>Voltar para login normal</Text>
           </TouchableOpacity>
         </View>
         
-        <Text style={styles.verseText}>"Quem encontra uma esposa encontra algo excelente; recebeu uma bênção do Senhor." Provérbios 18:22</Text>
+        <Text style={styles.verseText}>"Aquele que é fiel no pouco, também é fiel no muito." Lucas 16:10</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -248,6 +194,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.15)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    marginTop: Theme.spacing.sm,
   },
   logoSubtext: {
     fontFamily: Theme.typography.fontFamily.verse,
@@ -294,7 +241,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.light,
     borderRadius: Theme.borderRadius.md,
     paddingHorizontal: Theme.spacing.md,
-    marginBottom: Theme.spacing.xs,
+    marginBottom: Theme.spacing.md,
   },
   input: {
     flex: 1,
@@ -304,22 +251,6 @@ const styles = StyleSheet.create({
     marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
   },
-  fieldError: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.status.error,
-    marginBottom: Theme.spacing.md,
-    marginLeft: Theme.spacing.sm,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: Theme.spacing.lg,
-  },
-  forgotPasswordText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.primary.blue,
-  },
   loginButton: {
     flexDirection: 'row',
     backgroundColor: Theme.colors.primary.blue,
@@ -327,7 +258,7 @@ const styles = StyleSheet.create({
     paddingVertical: Theme.spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Theme.spacing.lg,
+    marginTop: Theme.spacing.md,
   },
   loginButtonDisabled: {
     backgroundColor: Theme.colors.ui.disabled,
@@ -338,57 +269,15 @@ const styles = StyleSheet.create({
     color: Theme.colors.background.white,
     marginRight: Theme.spacing.sm,
   },
-  orText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.md,
-  },
-  socialButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Theme.spacing.lg,
-  },
-  socialButton: {
-    flex: 0.48,
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    paddingVertical: Theme.spacing.sm,
+  backButton: {
     alignItems: 'center',
+    marginTop: Theme.spacing.md,
   },
-  socialButtonText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.dark,
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: Theme.spacing.md,
-  },
-  signupText: {
+  backButtonText: {
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-  },
-  signupLink: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.primary.pink,
-    marginLeft: Theme.spacing.xs,
-  },
-  adminLoginButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Theme.spacing.sm,
-  },
-  adminLoginText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.xs,
     color: Theme.colors.primary.blue,
-    marginLeft: Theme.spacing.xs,
+    textDecorationLine: 'underline',
   },
   verseText: {
     fontFamily: Theme.typography.fontFamily.verse,
