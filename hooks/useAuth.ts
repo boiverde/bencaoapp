@@ -97,10 +97,9 @@ export function useAuth() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Check credentials (mock validation)
-      // Added support for the admin user
-      if ((email === 'demo@example.com' && password === 'password') || 
-          (email === 'aguiar.neves@hotmail.com' && password === '12345678')) {
-        
+      // Allow login with the admin credentials or demo credentials
+      if ((email === 'aguiar.neves@hotmail.com' && password === '12345678') || 
+          (email === 'demo@example.com' && password === 'password')) {
         const mockUser: User = {
           id: 'user_1',
           email: email,

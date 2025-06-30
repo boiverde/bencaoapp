@@ -15,7 +15,7 @@ export default function LoginScreen() {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   
-  const { signIn, isLoading, error, isAuthenticated } = useAuth();
+  const { signIn, isLoading, error } = useAuth();
   const router = useRouter();
 
   // Debounced validation functions
@@ -67,12 +67,6 @@ export default function LoginScreen() {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
-  // If already authenticated, redirect to tabs
-  if (isAuthenticated) {
-    router.replace('/(tabs)');
-    return null;
-  }
 
   return (
     <KeyboardAvoidingView 
