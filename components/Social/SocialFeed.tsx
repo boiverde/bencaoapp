@@ -3,12 +3,12 @@ import {
   StyleSheet, 
   View, 
   Text, 
-  FlatList, 
+  FlatList as RNFlatList, 
   RefreshControl, 
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  ScrollView as RNScrollView
+  ScrollView
 } from 'react-native';
 import { 
   Filter, 
@@ -25,6 +25,9 @@ import { SocialPost } from '@/utils/socialSystem';
 import SocialPostCard from './SocialPostCard';
 import CreatePostModal from './CreatePostModal';
 import FeedFilterModal from './FeedFilterModal';
+
+// Use FlatList from react-native-web for web platform
+const FlatList = RNFlatList;
 
 interface SocialFeedProps {
   showCreatePost?: boolean;
@@ -47,7 +50,7 @@ export default function SocialFeed({
   
   const { feed, isLoading, refreshFeed, filterFeed } = useSocial();
   
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<RNFlatList>(null);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -161,13 +164,13 @@ export default function SocialFeed({
 
       {showFilters && (
         <View style={styles.filtersContainer}>
-          <RNScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {renderFilterButton('all', 'Todos', MessageSquare)}
             {renderFilterButton('prayer', 'Orações', PrayingHands)}
             {renderFilterButton('verse', 'Versículos', Book)}
             {renderFilterButton('testimony', 'Testemunhos', MessageSquare)}
             {renderFilterButton('event', 'Eventos', Calendar)}
-          </RNScrollView>
+          </ScrollView>
         </View>
       )}
 

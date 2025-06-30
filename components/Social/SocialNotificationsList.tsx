@@ -3,7 +3,7 @@ import {
   StyleSheet, 
   View, 
   Text, 
-  FlatList, 
+  FlatList as RNFlatList, 
   TouchableOpacity, 
   RefreshControl 
 } from 'react-native';
@@ -22,6 +22,9 @@ import {
 import Theme from '@/constants/Theme';
 import { useSocial } from '@/hooks/useSocial';
 import { SocialNotification } from '@/utils/socialSystem';
+
+// Use FlatList from react-native-web for web platform
+const FlatList = RNFlatList;
 
 interface SocialNotificationsListProps {
   onNotificationPress?: (notification: SocialNotification) => void;
@@ -145,7 +148,7 @@ export default function SocialNotificationsList({
       </View>
       
       {!item.read && (
-        <View style={styles.unreadIndicator} />
+        <View style={styles.unreadDot} />
       )}
     </TouchableOpacity>
   );
@@ -269,11 +272,13 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.xs,
     color: Theme.colors.text.medium,
   },
-  unreadIndicator: {
+  unreadDot: {
     width: 10,
     height: 10,
     borderRadius: Theme.borderRadius.circle,
     backgroundColor: Theme.colors.primary.blue,
+    marginTop: Theme.spacing.xs,
+    marginRight: Theme.spacing.sm,
   },
   emptyContainer: {
     flex: 1,

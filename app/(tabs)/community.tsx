@@ -1,5 +1,12 @@
 import { useState, useRef } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TextInput, FlatList as RNFlatList } from 'react-native';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  TextInput, 
+  FlatList as RNFlatList 
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
 import { Search, Filter, Bell, Users, Calendar, Book, Heart } from 'lucide-react-native';
@@ -9,6 +16,9 @@ import SocialGroupCard from '@/components/Social/SocialGroupCard';
 import SocialEventCard from '@/components/Social/SocialEventCard';
 import SocialNotificationsList from '@/components/Social/SocialNotificationsList';
 import { SocialPost, SocialGroup, SocialEvent } from '@/utils/socialSystem';
+
+// Use FlatList from react-native-web for web platform
+const FlatList = RNFlatList;
 
 export default function CommunityScreen() {
   const [activeTab, setActiveTab] = useState<'feed' | 'groups' | 'events' | 'notifications'>('feed');
@@ -48,7 +58,7 @@ export default function CommunityScreen() {
       
       case 'groups':
         return (
-          <RNFlatList
+          <FlatList
             data={groups}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
@@ -73,7 +83,7 @@ export default function CommunityScreen() {
       
       case 'events':
         return (
-          <RNFlatList
+          <FlatList
             data={events}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
