@@ -2,19 +2,7 @@ import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { 
-  Users, 
-  MessageSquare, 
-  Shield, 
-  Settings, 
-  LogOut, 
-  Bell, 
-  BarChart2, 
-  Calendar, 
-  Flag, 
-  UserX, 
-  Lock 
-} from 'lucide-react-native';
+import { Users, MessageSquare, Shield, Settings, LogOut, Bell, ChartBar as BarChart2, Calendar, Flag, UserX, Lock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminAuth } from '@/utils/adminAuth';
