@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, Image, Animated, PanResponder } from 'react-native';
+import { StyleSheet, View, Text, Animated, PanResponder } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
@@ -11,6 +11,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useGamification } from '@/hooks/useGamification';
 import CompatibilityDisplay from '@/components/UI/CompatibilityDisplay';
 import { CompatibilityAlgorithm, UserProfile } from '@/utils/compatibilityAlgorithm';
+import OptimizedImage from '@/components/UI/OptimizedImage';
 
 // Mock data
 const PROFILES = [
@@ -300,6 +301,10 @@ export default function DiscoverScreen() {
           <TouchableOpacity 
             style={styles.pointsBadge}
             onPress={() => setShowCompatibility(!showCompatibility)}
+            accessible={true}
+            accessibilityLabel={`Compatibilidade ${compatibilityScore?.overall}%`}
+            accessibilityRole="button"
+            accessibilityHint="Toque para ver detalhes de compatibilidade"
           >
             <Target size={16} color={Theme.colors.primary.blue} />
             <Text style={styles.pointsText}>{compatibilityScore?.overall}%</Text>
@@ -337,11 +342,18 @@ export default function DiscoverScreen() {
               ]
             }
           ]}
+          accessible={true}
+          accessibilityLabel={`Perfil de ${profile.name}, ${profile.age} anos, ${profile.denomination}`}
+          accessibilityHint="Arraste para a direita para curtir, ou para a esquerda para passar"
         >
-          <Image 
+          <OptimizedImage 
             source={{ uri: profile.image }} 
             style={styles.image}
-            loading="lazy"
+            width={400}
+            height={600}
+            quality={85}
+            format="webp"
+            accessibilityLabel={`Foto de ${profile.name}`}
           />
           
           <LinearGradient
@@ -373,13 +385,34 @@ export default function DiscoverScreen() {
       </View>
       
       <View style={styles.actionsContainer}>
-        <TouchableOpacity style={[styles.actionButton, styles.passButton]} onPress={handlePass}>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.passButton]} 
+          onPress={handlePass}
+          accessible={true}
+          accessibilityLabel="Passar"
+          accessibilityRole="button"
+          accessibilityHint="Toque para passar este perfil"
+        >
           <X size={30} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.followButton]} onPress={handleFollow}>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.followButton]} 
+          onPress={handleFollow}
+          accessible={true}
+          accessibilityLabel="Favoritar"
+          accessibilityRole="button"
+          accessibilityHint="Toque para favoritar este perfil"
+        >
           <Star size={30} color="#fff" fill="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.likeButton]} onPress={handleLike}>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.likeButton]} 
+          onPress={handleLike}
+          accessible={true}
+          accessibilityLabel="Curtir"
+          accessibilityRole="button"
+          accessibilityHint="Toque para curtir este perfil"
+        >
           <Heart size={30} color="#fff" fill="#fff" />
         </TouchableOpacity>
       </View>

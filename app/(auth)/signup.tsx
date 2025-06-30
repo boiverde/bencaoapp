@@ -1,97 +1,138 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight, Church, MapPin, Music, Ruler, Users, GraduationCap, Radiation as Zodiac, BookOpen, Globe } from 'lucide-react-native';
-import DenominationModal from '@/components/UI/DenominationModal';
-import LocationModal from '@/components/UI/LocationModal';
+import { Link, useRouter } from 'expo-router';
+import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { Performance } from '@/utils/performance';
 import PhotoUpload from '@/components/UI/PhotoUpload';
-import MoreAboutMeModal from '@/components/UI/MoreAboutMeModal';
-import LanguagesModal from '@/components/UI/LanguagesModal';
-import * as ImagePicker from 'expo-image-picker';
-
-const EDUCATION_LEVELS = [
-  'Ensino Fundamental',
-  'Ensino Médio',
-  'Ensino Técnico',
-  'Graduação',
-  'Pós-graduação',
-  'Mestrado',
-  'Doutorado'
-];
-
-const ZODIAC_SIGNS = [
-  'Áries',
-  'Touro',
-  'Gêmeos',
-  'Câncer',
-  'Leão',
-  'Virgem',
-  'Libra',
-  'Escorpião',
-  'Sagitário',
-  'Capricórnio',
-  'Aquário',
-  'Peixes'
-];
 
 export default function SignupScreen() {
-  const [denominationModalVisible, setDenominationModalVisible] = useState(false);
-  const [locationModalVisible, setLocationModalVisible] = useState(false);
-  const [selectedDenomination, setSelectedDenomination] = useState<string>();
-  const [selectedLocation, setSelectedLocation] = useState<{ state?: string; city?: string }>({});
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [photo, setPhoto] = useState<string>();
-  const [aboutMe, setAboutMe] = useState('');
-  const [favoriteWorship, setFavoriteWorship] = useState('');
-  const [height, setHeight] = useState('');
   
-  const [children, setChildren] = useState('0');
-  const [education, setEducation] = useState<string>();
-  const [zodiacSign, setZodiacSign] = useState<string>();
-  const [churchFrequency, setChurchFrequency] = useState('1');
-  const [educationModalVisible, setEducationModalVisible] = useState(false);
-  const [zodiacModalVisible, setZodiacModalVisible] = useState(false);
-  const [churchFrequencyModalVisible, setChurchFrequencyModalVisible] = useState(false);
-  const [childrenModalVisible, setChildrenModalVisible] = useState(false);
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [languagesModalVisible, setLanguagesModalVisible] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  
+  const { signUp, isLoading, error } = useAuth();
+  const router = useRouter();
+
+  // Debounced validation functions
+  const validateName = Performance.debounce((text: string) => {
+    if (!text) {
+      setNameError('Nome é obrigatório');
+    } else if (text.length < 3) {
+      setNameError('Nome deve ter pelo menos 3 caracteres');
+    } else {
+      setNameError('');
+    }
+  }, 300);
+
+  const validateEmail = Performance.debounce((text: string) => {
+    if (!text) {
+      setEmailError('Email é obrigatório');
+    } else if (!/\S+@\S+\.\S+/.test(text)) {
+      setEmailError('Email inválido');
+    } else {
+      setEmailError('');
+    }
+  }, 300);
+
+  const validatePassword = Performance.debounce((text: string) => {
+    if (!text) {
+      setPasswordError('Senha é obrigatória');
+    } else if (text.length < 6) {
+      setPasswordError('Senha deve ter pelo menos 6 caracteres');
+    } else {
+      setPasswordError('');
+    }
+    
+    // Also validate confirm password if it's not empty
+    if (confirmPassword) {
+      validateConfirmPassword(confirmPassword, text);
+    }
+  }, 300);
+
+  const validateConfirmPassword = Performance.debounce((text: string, pass: string = password) => {
+    if (!text) {
+      setConfirmPasswordError('Confirmação de senha é obrigatória');
+    } else if (text !== pass) {
+      setConfirmPasswordError('Senhas não coincidem');
+    } else {
+      setConfirmPasswordError('');
+    }
+  }, 300);
+
+  const handleNameChange = (text: string) => {
+    setName(text);
+    validateName(text);
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    validateEmail(text);
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    validatePassword(text);
+  };
+
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+    validateConfirmPassword(text);
+  };
+
+  const handleSignup = async () => {
+    // Validate all inputs
+    validateName(name);
+    validateEmail(email);
+    validatePassword(password);
+    validateConfirmPassword(confirmPassword);
+    
+    if (!name || !email || !password || !confirmPassword || 
+        nameError || emailError || passwordError || confirmPasswordError) {
+      return;
+    }
+    
+    const success = await signUp(email, password, name);
+    if (success) {
+      router.replace('/(tabs)');
+    }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
 
   const handleSelectPhoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setPhoto(result.assets[0].uri);
-    }
-  };
-
-  const handleAboutMeChange = (text: string) => {
-    if (text.length <= 500) {
-      setAboutMe(text);
-    }
-  };
-
-  const handleFavoriteWorshipChange = (text: string) => {
-    if (text.length <= 30) {
-      setFavoriteWorship(text);
-    }
-  };
-
-  const handleHeightChange = (text: string) => {
-    const numericValue = text.replace(/[^0-9]/g, '');
-    if (numericValue.length <= 3) {
-      setHeight(numericValue);
-    }
+    // This would use ImagePicker in a real implementation
+    setPhoto('https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg');
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
+    >
       <StatusBar style="light" />
       <LinearGradient
         colors={[Theme.colors.primary.blue, Theme.colors.primary.lilac, Theme.colors.primary.pink]}
@@ -100,17 +141,39 @@ export default function SignupScreen() {
         end={{ x: 1, y: 1 }}
       />
       
-      <View style={styles.logoContainer}>
-        <Text style={styles.logoText}>Bênção Match</Text>
-        <Text style={styles.logoSubtext}>Comece sua jornada abençoada</Text>
-      </View>
-      
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText}>Bênção Match</Text>
+          <Text style={styles.logoSubtext}>Comece sua jornada abençoada</Text>
+        </View>
+        
         <View style={styles.card}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={handleBack}
+            accessibilityLabel="Voltar"
+            accessibilityRole="button"
+          >
+            <ArrowLeft size={20} color={Theme.colors.text.dark} />
+          </TouchableOpacity>
+          
           <Text style={styles.cardTitle}>Criar Conta</Text>
           <Text style={styles.cardSubtitle}>Preencha seus dados para começar</Text>
           
-          <PhotoUpload photo={photo} onPress={handleSelectPhoto} />
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+          
+          <PhotoUpload 
+            photo={photo} 
+            onPress={handleSelectPhoto}
+            label="Adicionar foto de perfil"
+          />
           
           <View style={styles.inputContainer}>
             <User size={20} color={Theme.colors.text.medium} />
@@ -119,67 +182,14 @@ export default function SignupScreen() {
               placeholder="Nome completo"
               placeholderTextColor={Theme.colors.text.medium}
               autoCapitalize="words"
+              value={name}
+              onChangeText={handleNameChange}
+              editable={!isLoading}
+              accessibilityLabel="Nome completo"
+              accessibilityHint="Digite seu nome completo"
             />
           </View>
-          
-          <View style={styles.inputContainer}>
-            <Calendar size={20} color={Theme.colors.text.medium} />
-            <TextInput
-              style={styles.input}
-              placeholder="Data de nascimento"
-              placeholderTextColor={Theme.colors.text.medium}
-              keyboardType="numeric"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Ruler size={20} color={Theme.colors.text.medium} />
-            <TextInput
-              style={styles.input}
-              placeholder="Altura"
-              placeholderTextColor={Theme.colors.text.medium}
-              keyboardType="numeric"
-              value={height}
-              onChangeText={handleHeightChange}
-            />
-            {height.length > 0 && (
-              <Text style={styles.heightUnit}>cm</Text>
-            )}
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.inputContainer}
-            onPress={() => setDenominationModalVisible(true)}
-          >
-            <Church size={20} color={Theme.colors.text.medium} />
-            <View style={styles.selectContainer}>
-              <Text style={[
-                styles.selectText,
-                selectedDenomination && styles.selectedText
-              ]}>
-                {selectedDenomination || 'Selecione sua denominação'}
-              </Text>
-              <ChevronRight size={20} color={Theme.colors.text.medium} />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.inputContainer}
-            onPress={() => setLocationModalVisible(true)}
-          >
-            <MapPin size={20} color={Theme.colors.text.medium} />
-            <View style={styles.selectContainer}>
-              <Text style={[
-                styles.selectText,
-                (selectedLocation.state || selectedLocation.city) && styles.selectedText
-              ]}>
-                {selectedLocation.state && selectedLocation.city
-                  ? `${selectedLocation.city}, ${selectedLocation.state}`
-                  : 'Selecione sua localização'}
-              </Text>
-              <ChevronRight size={20} color={Theme.colors.text.medium} />
-            </View>
-          </TouchableOpacity>
+          {nameError ? <Text style={styles.fieldError}>{nameError}</Text> : null}
           
           <View style={styles.inputContainer}>
             <Mail size={20} color={Theme.colors.text.medium} />
@@ -189,8 +199,14 @@ export default function SignupScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={handleEmailChange}
+              editable={!isLoading}
+              accessibilityLabel="Email"
+              accessibilityHint="Digite seu email"
             />
           </View>
+          {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
           
           <View style={styles.inputContainer}>
             <Lock size={20} color={Theme.colors.text.medium} />
@@ -198,9 +214,26 @@ export default function SignupScreen() {
               style={styles.input}
               placeholder="Senha"
               placeholderTextColor={Theme.colors.text.medium}
-              secureTextEntry
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={handlePasswordChange}
+              editable={!isLoading}
+              accessibilityLabel="Senha"
+              accessibilityHint="Digite sua senha"
             />
+            <TouchableOpacity 
+              onPress={togglePasswordVisibility}
+              accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              accessibilityRole="button"
+            >
+              {showPassword ? (
+                <EyeOff size={20} color={Theme.colors.text.medium} />
+              ) : (
+                <Eye size={20} color={Theme.colors.text.medium} />
+              )}
+            </TouchableOpacity>
           </View>
+          {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
           
           <View style={styles.inputContainer}>
             <Lock size={20} color={Theme.colors.text.medium} />
@@ -208,139 +241,40 @@ export default function SignupScreen() {
               style={styles.input}
               placeholder="Confirmar senha"
               placeholderTextColor={Theme.colors.text.medium}
-              secureTextEntry
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={handleConfirmPasswordChange}
+              editable={!isLoading}
+              accessibilityLabel="Confirmar senha"
+              accessibilityHint="Digite sua senha novamente"
             />
+            <TouchableOpacity 
+              onPress={toggleConfirmPasswordVisibility}
+              accessibilityLabel={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+              accessibilityRole="button"
+            >
+              {showConfirmPassword ? (
+                <EyeOff size={20} color={Theme.colors.text.medium} />
+              ) : (
+                <Eye size={20} color={Theme.colors.text.medium} />
+              )}
+            </TouchableOpacity>
           </View>
-
-          <View style={styles.aboutMeContainer}>
-            <Text style={styles.aboutMeTitle}>Sobre mim</Text>
-            <TextInput
-              style={styles.aboutMeInput}
-              placeholder="Conte um pouco sobre você, seus interesses e o que busca em um relacionamento..."
-              placeholderTextColor={Theme.colors.text.medium}
-              multiline
-              textAlignVertical="top"
-              value={aboutMe}
-              onChangeText={handleAboutMeChange}
-            />
-            <Text style={styles.characterCount}>
-              {aboutMe.length}/500 caracteres
-            </Text>
-          </View>
-
-          <View style={styles.favoriteWorshipContainer}>
-            <Text style={styles.favoriteWorshipTitle}>Louvor favorito</Text>
-            <View style={styles.favoriteWorshipInputContainer}>
-              <Music size={20} color={Theme.colors.text.medium} />
-              <TextInput
-                style={styles.favoriteWorshipInput}
-                placeholder="Ex: Deus é Deus - Delino Marçal"
-                placeholderTextColor={Theme.colors.text.medium}
-                value={favoriteWorship}
-                onChangeText={handleFavoriteWorshipChange}
-              />
-            </View>
-            <Text style={styles.characterCount}>
-              {favoriteWorship.length}/30 caracteres
-            </Text>
-          </View>
-
-          <View style={styles.moreAboutMeContainer}>
-            <Text style={styles.sectionTitle}>Mais sobre mim</Text>
-            
-            <View style={styles.moreAboutMeSection}>
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setChildrenModalVisible(true)}
-              >
-                <Users size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Filhos</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    children && styles.selectedText
-                  ]}>
-                    {children || 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setEducationModalVisible(true)}
-              >
-                <GraduationCap size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Formação</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    education && styles.selectedText
-                  ]}>
-                    {education || 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setZodiacModalVisible(true)}
-              >
-                <Zodiac size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Signo</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    zodiacSign && styles.selectedText
-                  ]}>
-                    {zodiacSign || 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setChurchFrequencyModalVisible(true)}
-              >
-                <BookOpen size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Frequência na Igreja</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    churchFrequency && styles.selectedText
-                  ]}>
-                    {churchFrequency ? `${churchFrequency}x por semana` : 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.moreAboutMeRow}
-                onPress={() => setLanguagesModalVisible(true)}
-              >
-                <Globe size={20} color={Theme.colors.text.medium} />
-                <Text style={styles.moreAboutMeLabel}>Línguas faladas</Text>
-                <View style={styles.selectContainer}>
-                  <Text style={[
-                    styles.selectText,
-                    languages.length > 0 && styles.selectedText
-                  ]}>
-                    {languages.length > 0 
-                      ? languages.join(', ')
-                      : 'Selecione'}
-                  </Text>
-                  <ChevronRight size={20} color={Theme.colors.text.medium} />
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
+          {confirmPasswordError ? <Text style={styles.fieldError}>{confirmPasswordError}</Text> : null}
           
-          <TouchableOpacity style={styles.signupButton}>
-            <Text style={styles.signupButtonText}>Criar conta</Text>
-            <ChevronRight size={20} color="#fff" />
+          <TouchableOpacity 
+            style={[styles.signupButton, isLoading && styles.signupButtonDisabled]}
+            onPress={handleSignup}
+            disabled={isLoading}
+            accessibilityLabel="Criar conta"
+            accessibilityRole="button"
+            accessibilityHint="Toque para criar sua conta"
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.signupButtonText}>Criar conta</Text>
+            )}
           </TouchableOpacity>
           
           <View style={styles.termsContainer}>
@@ -354,80 +288,28 @@ export default function SignupScreen() {
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Já tem uma conta?</Text>
             <Link href="/login" asChild>
-              <TouchableOpacity>
+              <TouchableOpacity accessibilityRole="link" accessibilityHint="Ir para a tela de login">
                 <Text style={styles.loginLink}>Entrar</Text>
               </TouchableOpacity>
             </Link>
           </View>
         </View>
+        
+        <Text style={styles.verseText}>"Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará." Salmos 37:5</Text>
       </ScrollView>
-      
-      <Text style={styles.verseText}>"Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará." Salmos 37:5</Text>
-
-      <DenominationModal
-        visible={denominationModalVisible}
-        onClose={() => setDenominationModalVisible(false)}
-        onSelect={setSelectedDenomination}
-        selectedDenomination={selectedDenomination}
-      />
-
-      <LocationModal
-        visible={locationModalVisible}
-        onClose={() => setLocationModalVisible(false)}
-        onSelect={setSelectedLocation}
-        selectedState={selectedLocation.state}
-        selectedCity={selectedLocation.city}
-      />
-
-      <MoreAboutMeModal
-        visible={childrenModalVisible}
-        onClose={() => setChildrenModalVisible(false)}
-        onSelect={setChildren}
-        selectedValue={children}
-        options={Array.from({ length: 11 }, (_, i) => i.toString())}
-        title="Número de Filhos"
-      />
-
-      <MoreAboutMeModal
-        visible={educationModalVisible}
-        onClose={() => setEducationModalVisible(false)}
-        onSelect={setEducation}
-        selectedValue={education}
-        options={EDUCATION_LEVELS}
-        title="Nível de Escolaridade"
-      />
-
-      <MoreAboutMeModal
-        visible={zodiacModalVisible}
-        onClose={() => setZodiacModalVisible(false)}
-        onSelect={setZodiacSign}
-        selectedValue={zodiacSign}
-        options={ZODIAC_SIGNS}
-        title="Signo"
-      />
-
-      <MoreAboutMeModal
-        visible={churchFrequencyModalVisible}
-        onClose={() => setChurchFrequencyModalVisible(false)}
-        onSelect={setChurchFrequency}
-        selectedValue={churchFrequency}
-        options={Array.from({ length: 7 }, (_, i) => (i + 1).toString())}
-        title="Frequência na Igreja"
-      />
-
-      <LanguagesModal
-        visible={languagesModalVisible}
-        onClose={() => setLanguagesModalVisible(false)}
-        onSelect={setLanguages}
-        selectedLanguages={languages}
-      />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Theme.spacing.xl,
   },
   background: {
     position: 'absolute',
@@ -436,14 +318,9 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
   },
-  scrollContent: {
-    flexGrow: 1,
-    alignItems: 'center',
-    paddingVertical: Theme.spacing.xl,
-  },
   logoContainer: {
     alignItems: 'center',
-    marginTop: Theme.spacing.xl,
+    marginBottom: Theme.spacing.xl,
   },
   logoText: {
     fontFamily: Theme.typography.fontFamily.heading,
@@ -468,6 +345,10 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.lg,
     ...Theme.shadows.medium,
   },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: Theme.spacing.md,
+  },
   cardTitle: {
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xl,
@@ -480,13 +361,25 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.medium,
     marginBottom: Theme.spacing.lg,
   },
+  errorContainer: {
+    backgroundColor: Theme.colors.status.error + '20',
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.sm,
+    marginBottom: Theme.spacing.md,
+  },
+  errorText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.status.error,
+    textAlign: 'center',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Theme.colors.background.light,
     borderRadius: Theme.borderRadius.md,
     paddingHorizontal: Theme.spacing.md,
-    marginBottom: Theme.spacing.md,
+    marginBottom: Theme.spacing.xs,
   },
   input: {
     flex: 1,
@@ -496,108 +389,14 @@ const styles = StyleSheet.create({
     marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
   },
-  heightUnit: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.medium,
-    marginLeft: Theme.spacing.sm,
-    paddingVertical: Theme.spacing.md,
-  },
-  selectContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Theme.spacing.md,
-    marginLeft: Theme.spacing.sm,
-  },
-  selectText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.medium,
-  },
-  selectedText: {
-    color: Theme.colors.text.dark,
-  },
-  aboutMeContainer: {
-    marginBottom: Theme.spacing.md,
-  },
-  aboutMeTitle: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.sm,
-  },
-  aboutMeInput: {
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.md,
-    height: 120,
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-  },
-  favoriteWorshipContainer: {
-    marginBottom: Theme.spacing.md,
-  },
-  favoriteWorshipTitle: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
-    marginBottom: Theme.spacing.sm,
-  },
-  favoriteWorshipInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    paddingHorizontal: Theme.spacing.md,
-  },
-  favoriteWorshipInput: {
-    flex: 1,
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    paddingVertical: Theme.spacing.md,
-    marginLeft: Theme.spacing.sm,
-    color: Theme.colors.text.dark,
-  },
-  characterCount: {
+  fieldError: {
     fontFamily: Theme.typography.fontFamily.body,
     fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.medium,
-    textAlign: 'right',
-    marginTop: Theme.spacing.xs,
-  },
-  moreAboutMeContainer: {
-    marginBottom: Theme.spacing.lg,
-  },
-  sectionTitle: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.lg,
-    color: Theme.colors.text.dark,
+    color: Theme.colors.status.error,
     marginBottom: Theme.spacing.md,
-  },
-  moreAboutMeSection: {
-    backgroundColor: Theme.colors.background.light,
-    borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.md,
-  },
-  moreAboutMeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.ui.border,
-  },
-  moreAboutMeLabel: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.text.dark,
     marginLeft: Theme.spacing.sm,
-    width: 100,
   },
   signupButton: {
-    flexDirection: 'row',
     backgroundColor: Theme.colors.primary.blue,
     borderRadius: Theme.borderRadius.md,
     paddingVertical: Theme.spacing.md,
@@ -606,11 +405,13 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.md,
     marginBottom: Theme.spacing.md,
   },
+  signupButtonDisabled: {
+    backgroundColor: Theme.colors.ui.disabled,
+  },
   signupButtonText: {
     fontFamily: Theme.typography.fontFamily.subheading,
     fontSize: Theme.typography.fontSize.md,
     color: Theme.colors.background.white,
-    marginRight: Theme.spacing.sm,
   },
   termsContainer: {
     marginBottom: Theme.spacing.lg,
@@ -647,8 +448,7 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.fontSize.sm,
     color: Theme.colors.background.white,
     textAlign: 'center',
-    marginTop: Theme.spacing.md,
-    marginBottom: Theme.spacing.xl,
+    marginTop: Theme.spacing.xl,
     paddingHorizontal: Theme.spacing.lg,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },

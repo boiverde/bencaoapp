@@ -17,11 +17,18 @@ export default function NotificationBell({
   const { unreadCount } = useNotifications();
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity 
+      style={styles.container} 
+      onPress={onPress}
+      accessible={true}
+      accessibilityLabel={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ''}`}
+      accessibilityRole="button"
+      accessibilityHint="Toque para ver suas notificações"
+    >
       <Bell size={size} color={color} />
       {unreadCount > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>
+          <Text style={styles.badgeText} accessibilityLabel={`${unreadCount} notificações não lidas`}>
             {unreadCount > 99 ? '99+' : unreadCount.toString()}
           </Text>
         </View>

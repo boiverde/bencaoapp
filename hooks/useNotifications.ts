@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
@@ -179,7 +179,7 @@ export function useNotifications() {
     console.log('Navigate to:', type, data);
   };
 
-  const sendLocalNotification = async (
+  const sendLocalNotification = useCallback(async (
     title: string,
     body: string,
     type: NotificationData['type'],
@@ -187,15 +187,19 @@ export function useNotifications() {
   ) => {
     // Only send actual notifications on non-web platforms
     if (Platform.OS !== 'web') {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          data: { type, ...data },
-          sound: 'default',
-        },
-        trigger: null, // Send immediately
-      });
+      try {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title,
+            body,
+            data: { type, ...data },
+            sound: 'default',
+          },
+          trigger: null, // Send immediately
+        });
+      } catch (error) {
+        console.error('Error scheduling notification:', error);
+      }
     } else {
       // For web, we can simulate the notification by adding it directly to the state
       const notificationData: NotificationData = {
@@ -221,9 +225,9 @@ export function useNotifications() {
         });
       }
     }
-  };
+  }, []);
 
-  const markAsRead = (notificationId: string) => {
+  const markAsRead = useCallback((notificationId: string) => {
     if (isMounted.current) {
       setNotifications(prev => 
         prev.map(notification => 
@@ -234,18 +238,18 @@ export function useNotifications() {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     }
-  };
+  }, []);
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     if (isMounted.current) {
       setNotifications(prev => 
         prev.map(notification => ({ ...notification, read: true }))
       );
       setUnreadCount(0);
     }
-  };
+  }, []);
 
-  const deleteNotification = (notificationId: string) => {
+  const deleteNotification = useCallback((notificationId: string) => {
     if (isMounted.current) {
       setNotifications(prev => {
         const notification = prev.find(n => n.id === notificationId);
@@ -255,68 +259,68 @@ export function useNotifications() {
         return prev.filter(n => n.id !== notificationId);
       });
     }
-  };
+  }, []);
 
-  const clearAllNotifications = () => {
+  const clearAllNotifications = useCallback(() => {
     if (isMounted.current) {
       setNotifications([]);
       setUnreadCount(0);
     }
-  };
+  }, []);
 
   // Predefined notification templates
-  const sendMatchNotification = (matchName: string) => {
+  const sendMatchNotification = useCallback((matchName: string) => {
     sendLocalNotification(
       'Nova Conexão Abençoada! 💕',
       `Você e ${matchName} se conectaram! Que Deus abençoe esta nova amizade.`,
       'match',
       { matchName }
     );
-  };
+  }, [sendLocalNotification]);
 
-  const sendMessageNotification = (senderName: string, preview: string) => {
+  const sendMessageNotification = useCallback((senderName: string, preview: string) => {
     sendLocalNotification(
       'Nova Mensagem',
       `${senderName}: ${preview}`,
       'message',
       { senderName, preview }
     );
-  };
+  }, [sendLocalNotification]);
 
-  const sendEventNotification = (eventTitle: string, eventTime: string) => {
+  const sendEventNotification = useCallback((eventTitle: string, eventTime: string) => {
     sendLocalNotification(
       'Evento Próximo 📅',
       `${eventTitle} - ${eventTime}`,
       'event',
       { eventTitle, eventTime }
     );
-  };
+  }, [sendLocalNotification]);
 
-  const sendPrayerNotification = (message: string) => {
+  const sendPrayerNotification = useCallback((message: string) => {
     sendLocalNotification(
       'Momento de Oração 🙏',
       message,
       'prayer'
     );
-  };
+  }, [sendLocalNotification]);
 
-  const sendLikeNotification = (likerName: string) => {
+  const sendLikeNotification = useCallback((likerName: string) => {
     sendLocalNotification(
       'Nova Curtida ❤️',
       `${likerName} curtiu sua publicação`,
       'like',
       { likerName }
     );
-  };
+  }, [sendLocalNotification]);
 
-  const sendFollowNotification = (followerName: string) => {
+  const sendFollowNotification = useCallback((followerName: string) => {
     sendLocalNotification(
       'Novo Seguidor ⭐',
       `${followerName} começou a te seguir`,
       'follow',
       { followerName }
     );
-  };
+  }, [sendLocalNotification]);
 
   return {
     expoPushToken,

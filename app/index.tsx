@@ -4,9 +4,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Theme from '@/constants/Theme';
 import { Heart, Sparkles } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SplashScreen() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const sparkleAnim = useRef(new Animated.Value(0)).current;
@@ -41,13 +43,17 @@ export default function SplashScreen() {
       ),
     ]).start();
 
-    // Navigate to login after 4 seconds
+    // Navigate after 3 seconds
     const timer = setTimeout(() => {
-      router.replace('/(auth)/login');
-    }, 4000);
+      if (isAuthenticated) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/(auth)/login');
+      }
+    }, 3000);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, sparkleAnim, router]);
+  }, [fadeAnim, scaleAnim, sparkleAnim, router, isAuthenticated]);
 
   return (
     <View style={styles.container}>

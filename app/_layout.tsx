@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Stack, SplashScreen, Redirect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useFonts } from 'expo-font';
@@ -13,13 +13,17 @@ import {
   OpenSans_600SemiBold
 } from '@expo-google-fonts/open-sans';
 import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
-import { SplashScreen } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth';
+import { View, Text, ActivityIndicator } from 'react-native';
+import Theme from '@/constants/Theme';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useFrameworkReady();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [appIsReady, setAppIsReady] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({
     'Montserrat-Regular': Montserrat_400Regular,
@@ -31,19 +35,33 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if ((fontsLoaded || fontError) && !authLoading) {
+      setAppIsReady(true);
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, authLoading]);
 
-  // Return null to keep splash screen visible while fonts load
-  if (!fontsLoaded && !fontError) {
+  // Return null to keep splash screen visible while fonts load and auth initializes
+  if (!appIsReady) {
     return null;
+  }
+
+  // Show a loading indicator if auth is still loading
+  if (authLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Theme.colors.primary.blue} />
+        <Text style={{ marginTop: 10, fontFamily: 'OpenSans-Regular' }}>
+          Carregando...
+        </Text>
+      </View>
+    );
   }
 
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />

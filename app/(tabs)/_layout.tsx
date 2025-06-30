@@ -2,8 +2,17 @@ import { Tabs } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import Colors from '@/constants/Colors';
 import { Heart, MessageSquare, Calendar, User, Search, Users } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { Redirect } from 'expo-router';
 
 export default function TabLayout() {
+  const { isAuthenticated } = useAuth();
+
+  // If the user is not authenticated, redirect to the login screen
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -20,6 +29,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Heart size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: "Descobrir perfis",
         }}
       />
       <Tabs.Screen
@@ -29,6 +39,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Search size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: "Ver conexões",
         }}
       />
       <Tabs.Screen
@@ -38,6 +49,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MessageSquare size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: "Mensagens",
         }}
       />
       <Tabs.Screen
@@ -47,6 +59,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Users size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: "Comunidade",
         }}
       />
       <Tabs.Screen
@@ -56,6 +69,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Calendar size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: "Eventos",
         }}
       />
       <Tabs.Screen
@@ -65,6 +79,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <User size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: "Meu perfil",
         }}
       />
     </Tabs>
