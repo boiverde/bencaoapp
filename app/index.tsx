@@ -1,167 +1,139 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { StyleSheet, View, Text, Animated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react-native';
+import { useRouter, Redirect } from 'expo-router';
+import Theme from '@/constants/Theme';
+import { Heart, Sparkles } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  
+export default function SplashScreen() {
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const sparkleAnim = useRef(new Animated.Value(0)).current;
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Por favor, preencha todos os campos');
-      return;
-    }
-    
-    setIsLoading(true);
-    setError('');
-    
-    // Simulando uma chamada de API
-    setTimeout(() => {
-      // Credenciais de teste para login
-      if ((email === 'demo@example.com' && password === 'password') || 
-          (email === 'aguiar.neves@hotmail.com' && password === '12345678')) {
-        // Login bem-sucedido
+  useEffect(() => {
+    // Start animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(sparkleAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(sparkleAnim, {
+            toValue: 0,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
+      ),
+    ]).start();
+
+    // Navigate after 3 seconds
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
         router.replace('/(tabs)');
       } else {
-        // Login falhou
-        setError('Email ou senha inválidos');
-        setIsLoading(false);
+        router.replace('/(auth)/login');
       }
-    }, 1500);
-  };
+    }, 3000);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+    return () => clearTimeout(timer);
+  }, [fadeAnim, scaleAnim, sparkleAnim, router, isAuthenticated]);
+
+  // If auth is still loading, show the splash screen
+  if (isLoading) {
+    return null;
+  }
+
+  // If auth is already determined, redirect immediately
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
-    >
-      <StatusBar style="light" />
+    <View style={styles.container}>
       <LinearGradient
-        colors={['#6BBBDD', '#B8A0D9', '#F498B6']}
+        colors={[Theme.colors.primary.blue, Theme.colors.primary.lilac, Theme.colors.primary.pink]}
         style={styles.background}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       />
       
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+      <Animated.View 
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }]
+          }
+        ]}
       >
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>Bênção Match</Text>
-          <Text style={styles.logoSubtext}>Conexões abençoadas</Text>
-        </View>
-        
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Cliente de Teste</Text>
-          <Text style={styles.cardSubtitle}>Use as credenciais abaixo para testar o aplicativo</Text>
-          
-          <View style={styles.testCredentials}>
-            <Text style={styles.credentialLabel}>Email: <Text style={styles.credentialValue}>demo@example.com</Text></Text>
-            <Text style={styles.credentialLabel}>Senha: <Text style={styles.credentialValue}>password</Text></Text>
-          </View>
-          
-          {error && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-          
-          <View style={styles.inputContainer}>
-            <Mail size={20} color="#636E72" />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#636E72"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-              editable={!isLoading}
-              accessibilityLabel="Email"
-              accessibilityHint="Digite seu email de login"
-            />
-          </View>
-          
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="#636E72" />
-            <TextInput
-              style={styles.input}
-              placeholder="Senha"
-              placeholderTextColor="#636E72"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-              editable={!isLoading}
-              accessibilityLabel="Senha"
-              accessibilityHint="Digite sua senha"
-            />
-            <TouchableOpacity 
-              onPress={togglePasswordVisibility}
-              accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
-              accessibilityRole="button"
-            >
-              {showPassword ? (
-                <EyeOff size={20} color="#636E72" />
-              ) : (
-                <Eye size={20} color="#636E72" />
-              )}
-            </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-            accessibilityLabel="Entrar"
-            accessibilityRole="button"
-            accessibilityHint="Toque para fazer login"
+          <Animated.View 
+            style={[
+              styles.heartContainer,
+              {
+                opacity: sparkleAnim,
+                transform: [{
+                  rotate: sparkleAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '360deg']
+                  })
+                }]
+              }
+            ]}
           >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.loginButtonText}>Entrar</Text>
-                <ArrowRight size={20} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
+            <Heart size={60} color={Theme.colors.primary.gold} fill={Theme.colors.primary.gold} />
+          </Animated.View>
           
-          <View style={styles.adminSection}>
-            <Text style={styles.adminText}>Credenciais de Administrador:</Text>
-            <Text style={styles.credentialLabel}>Email: <Text style={styles.credentialValue}>aguiar.neves@hotmail.com</Text></Text>
-            <Text style={styles.credentialLabel}>Senha: <Text style={styles.credentialValue}>12345678</Text></Text>
-          </View>
+          <Text style={styles.appName}>Bênção Match</Text>
+          <Text style={styles.tagline}>Conexões abençoadas</Text>
+          
+          {Platform.OS !== 'web' && (
+            <Animated.View 
+              style={[
+                styles.sparklesContainer,
+                { opacity: sparkleAnim }
+              ]}
+            >
+              <Sparkles size={24} color={Theme.colors.background.white} style={styles.sparkle1} />
+              <Sparkles size={18} color={Theme.colors.primary.gold} style={styles.sparkle2} />
+              <Sparkles size={20} color={Theme.colors.background.white} style={styles.sparkle3} />
+            </Animated.View>
+          )}
         </View>
         
-        <Text style={styles.verseText}>"Quem encontra uma esposa encontra algo excelente; recebeu uma bênção do Senhor." Provérbios 18:22</Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <View style={styles.verseContainer}>
+          <Text style={styles.verseText}>
+            "Quem encontra uma esposa encontra algo excelente; recebeu uma bênção do Senhor."
+          </Text>
+          <Text style={styles.verseReference}>Provérbios 18:22</Text>
+        </View>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 32,
+    alignItems: 'center',
   },
   background: {
     position: 'absolute',
@@ -170,131 +142,90 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
   },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.lg,
+  },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: Theme.spacing.xxl,
+    position: 'relative',
   },
-  logoText: {
-    fontFamily: 'Montserrat-Bold',
-    fontSize: 30,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  logoSubtext: {
-    fontFamily: 'PlayfairDisplay-Italic',
-    fontSize: 16,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  card: {
-    width: '85%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
+  heartContainer: {
+    marginBottom: Theme.spacing.lg,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  cardTitle: {
-    fontFamily: 'Montserrat-Bold',
-    fontSize: 20,
-    color: '#2D3436',
-    marginBottom: 4,
-  },
-  cardSubtitle: {
-    fontFamily: 'OpenSans-Regular',
-    fontSize: 16,
-    color: '#636E72',
-    marginBottom: 16,
-  },
-  testCredentials: {
-    backgroundColor: '#F5F8FA',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  credentialLabel: {
-    fontFamily: 'OpenSans-Regular',
-    fontSize: 14,
-    color: '#636E72',
-    marginBottom: 4,
-  },
-  credentialValue: {
-    fontFamily: 'OpenSans-SemiBold',
-    color: '#6BBBDD',
-  },
-  errorContainer: {
-    backgroundColor: '#EB5757' + '20',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontFamily: 'OpenSans-Regular',
-    fontSize: 14,
-    color: '#EB5757',
+  appName: {
+    fontFamily: Theme.typography.fontFamily.heading,
+    fontSize: 42,
+    color: Theme.colors.background.white,
     textAlign: 'center',
+    marginBottom: Theme.spacing.sm,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 6,
+    letterSpacing: 1,
   },
-  inputContainer: {
-    flexDirection: 'row',
+  tagline: {
+    fontFamily: Theme.typography.fontFamily.verse,
+    fontSize: Theme.typography.fontSize.lg,
+    color: Theme.colors.background.white,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    opacity: 0.9,
+  },
+  sparklesContainer: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    top: -50,
+  },
+  sparkle1: {
+    position: 'absolute',
+    top: 20,
+    right: 30,
+  },
+  sparkle2: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+  },
+  sparkle3: {
+    position: 'absolute',
+    top: 60,
+    left: 40,
+  },
+  verseContainer: {
     alignItems: 'center',
-    backgroundColor: '#F5F8FA',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  input: {
-    flex: 1,
-    fontFamily: 'OpenSans-Regular',
-    fontSize: 16,
-    paddingVertical: 16,
-    marginLeft: 8,
-    color: '#2D3436',
-  },
-  loginButton: {
-    flexDirection: 'row',
-    backgroundColor: '#6BBBDD',
-    borderRadius: 8,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  loginButtonDisabled: {
-    backgroundColor: '#EAEAEA',
-  },
-  loginButtonText: {
-    fontFamily: 'Montserrat-SemiBold',
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginRight: 8,
-  },
-  adminSection: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#DFE6E9',
-  },
-  adminText: {
-    fontFamily: 'OpenSans-SemiBold',
-    fontSize: 14,
-    color: '#2D3436',
-    marginBottom: 8,
+    paddingHorizontal: Theme.spacing.md,
+    position: 'absolute',
+    bottom: Theme.spacing.xxl,
   },
   verseText: {
-    fontFamily: 'PlayfairDisplay-Italic',
-    fontSize: 14,
-    color: '#FFFFFF',
+    fontFamily: Theme.typography.fontFamily.verse,
+    fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.background.white,
     textAlign: 'center',
-    marginTop: 32,
-    paddingHorizontal: 24,
+    lineHeight: 24,
+    marginBottom: Theme.spacing.xs,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  verseReference: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.primary.gold,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
