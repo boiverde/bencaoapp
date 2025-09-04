@@ -27,6 +27,8 @@
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@supabase/supabase-js": "^2.39.0",
+    "expo-image-manipulator": "^13.1.7",
+    "expo-secure-store": "^14.2.4",
     "dotenv": "^17.2.2",
     "expo": "53.0.22",
     "expo-blur": "~14.1.5",

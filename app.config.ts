@@ -53,6 +53,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router", 
     "expo-font", 
     "expo-web-browser",
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/images/icon.png",
+        color: "#6BBBDD",
+        sounds: ["./assets/sounds/notification.wav"]
+      }
+    ],
     
     [
       "expo-camera",
