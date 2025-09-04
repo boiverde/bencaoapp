@@ -18,7 +18,7 @@ export interface AuthState {
   error: string | null;
 }
 
-// USUARIOS MOCK para teste
+// MOCK USERS para teste
 const MOCK_USERS = [
   {
     email: 'demo@example.com',
@@ -26,7 +26,8 @@ const MOCK_USERS = [
     user: {
       id: '1',
       email: 'demo@example.com',
-      name: 'Usuario Demo',
+      name: 'Usuário Demo',
+      photoUrl: undefined,
       emailVerified: true,
       phoneVerified: false,
       createdAt: Date.now()
@@ -37,8 +38,9 @@ const MOCK_USERS = [
     password: '123456',
     user: {
       id: '2',
-      email: 'teste@gmail.com',
-      name: 'Usuario Teste',
+      email: 'teste@gmail.com', 
+      name: 'Usuário Teste',
+      photoUrl: undefined,
       emailVerified: true,
       phoneVerified: false,
       createdAt: Date.now()
@@ -54,10 +56,15 @@ export function useAuth() {
     error: null
   });
 
+  // Simulate login
   const login = useCallback(async (email: string, password: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    
+    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
     const mockUser = MOCK_USERS.find(u => u.email === email && u.password === password);
+    
     if (mockUser) {
       setAuthState({
         user: mockUser.user,
@@ -76,10 +83,13 @@ export function useAuth() {
     }
   }, [setAuthState]);
 
+  // Simulate signup
   const signUp = useCallback(async (email: string, password: string, name: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const newUser = {
+    
+    const newUser: User = {
       id: Date.now().toString(),
       email,
       name,
@@ -87,15 +97,18 @@ export function useAuth() {
       phoneVerified: false,
       createdAt: Date.now()
     };
+    
     setAuthState({
       user: newUser,
       isLoading: false,
       isAuthenticated: true,
       error: null
     });
+    
     return { user: newUser, error: null };
   }, [setAuthState]);
 
+  // Logout
   const logout = useCallback(async () => {
     setAuthState({
       user: null,
