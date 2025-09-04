@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import Colors from '@/constants/Colors';
-import { Heart, MessageSquare, Calendar, User, Search, Users } from 'lucide-react-native';
+import { Heart, MessageSquare, Calendar, User, Search } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -9,6 +9,8 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors.primary.blue,
         tabBarInactiveTintColor: Colors.text.medium,
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabBarLabel,
         headerShown: false,
       }}>
       <Tabs.Screen
@@ -39,15 +41,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
-        options={{
-          title: 'Comunidade',
-          tabBarIcon: ({ color, size }) => (
-            <Users size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="events"
         options={{
           title: 'Eventos',
@@ -68,3 +61,18 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: Colors.background.white,
+    borderTopWidth: 1,
+    borderTopColor: Colors.ui.border,
+    height: 60,
+    paddingBottom: 8,
+    paddingTop: 8,
+  },
+  tabBarLabel: {
+    fontFamily: 'Montserrat-SemiBold',
+    fontSize: 12,
+  },
+});

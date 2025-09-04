@@ -1,121 +1,54 @@
-import { useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  FlatList as RNFlatList, 
-  TouchableOpacity, 
-  TextInput 
-} from 'react-native';
+import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Search, Filter, MessageSquare, Phone, Video, HandHelping as PrayingHands } from 'lucide-react-native';
-import ConversationItem from '@/components/UI/ConversationItem';
-import { useCommunication } from '@/hooks/useCommunication';
-import { useRouter } from 'expo-router';
+import { Search, MessageSquare, Filter } from 'lucide-react-native';
+import { TextInput } from 'react-native-gesture-handler';
 
-// Use FlatList from react-native-web for web platform
-const FlatList = RNFlatList;
+// Mock data
+const MATCHES = [
+  {
+    id: '1',
+    name: 'Mariana',
+    age: 28,
+    lastActive: 'Agora',
+    message: 'Oi! Tudo bem com você?',
+    image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    unread: true,
+  },
+  {
+    id: '2',
+    name: 'João',
+    age: 30,
+    lastActive: '5 min',
+    message: 'Qual sua igreja? 🙏',
+    image: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    unread: false,
+  },
+  {
+    id: '3',
+    name: 'Gabriela',
+    age: 26,
+    lastActive: '2 dias',
+    message: 'Você vai ao evento no domingo?',
+    image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    unread: false,
+  },
+  {
+    id: '4',
+    name: 'Lucas',
+    age: 32,
+    lastActive: '1 hora',
+    message: 'Amém! Concordo totalmente.',
+    image: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    unread: true,
+  },
+];
 
 export default function MatchesScreen() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'prayer' | 'archived'>('all');
-  
-  const router = useRouter();
-  const {
-    conversations,
-    getUnreadCount,
-    markConversationAsRead,
-    startVoiceCall,
-    isUserOnline,
-    getTypingUsers
-  } = useCommunication();
-
-  const filteredConversations = conversations.filter(conversation => {
-    // Apply search filter
-    if (searchQuery) {
-      const searchTerm = searchQuery.toLowerCase();
-      const title = conversation.title || 'Conversa';
-      const lastMessage = conversation.lastMessage?.content || '';
-      
-      if (!title.toLowerCase().includes(searchTerm) && 
-          !lastMessage.toLowerCase().includes(searchTerm)) {
-        return false;
-      }
-    }
-
-    // Apply category filter
-    switch (activeFilter) {
-      case 'unread':
-        return conversation.unreadCount > 0;
-      case 'prayer':
-        return conversation.type === 'prayer_circle';
-      case 'archived':
-        return conversation.isArchived;
-      default:
-        return !conversation.isArchived;
-    }
-  });
-
-  const handleConversationPress = (conversationId: string) => {
-    markConversationAsRead(conversationId);
-    router.push('/chat');
-  };
-
-  const handleVoiceCall = (conversationId: string) => {
-    startVoiceCall(conversationId, 'voice');
-  };
-
-  const handleVideoCall = (conversationId: string) => {
-    startVoiceCall(conversationId, 'video');
-  };
-
-  const renderFilterButton = (filter: typeof activeFilter, label: string, count?: number) => (
-    <TouchableOpacity
-      style={[styles.filterButton, activeFilter === filter && styles.activeFilterButton]}
-      onPress={() => setActiveFilter(filter)}
-    >
-      <Text style={[
-        styles.filterButtonText,
-        activeFilter === filter && styles.activeFilterButtonText
-      ]}>
-        {label}
-        {count !== undefined && count > 0 && ` (${count})`}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const renderConversation = ({ item }) => {
-    const otherParticipant = item.participants.find(p => p !== 'current_user');
-    const isOnline = otherParticipant ? isUserOnline(otherParticipant) : false;
-    const typingUsers = getTypingUsers(item.id);
-    const isTyping = typingUsers.length > 0;
-
-    return (
-      <ConversationItem
-        conversation={item}
-        isOnline={isOnline}
-        isTyping={isTyping}
-        onPress={() => handleConversationPress(item.id)}
-        onVoiceCall={() => handleVoiceCall(item.id)}
-        onVideoCall={() => handleVideoCall(item.id)}
-      />
-    );
-  };
-
-  const unreadCount = getUnreadCount();
-  const prayerCircles = conversations.filter(c => c.type === 'prayer_circle').length;
-  const archivedCount = conversations.filter(c => c.isArchived).length;
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Conexões Abençoadas</Text>
-        {unreadCount > 0 && (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
-          </View>
-        )}
       </View>
       
       <View style={styles.searchContainer}>
@@ -123,47 +56,74 @@ export default function MatchesScreen() {
           <Search size={20} color={Theme.colors.text.medium} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar conversas..."
+            placeholder="Buscar conexões..."
             placeholderTextColor={Theme.colors.text.medium}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
           />
         </View>
-        
-        <TouchableOpacity style={styles.filterIconButton}>
+        <TouchableOpacity style={styles.filterButton}>
           <Filter size={20} color={Theme.colors.primary.blue} />
         </TouchableOpacity>
       </View>
-
-      <View style={styles.filtersContainer}>
-        {renderFilterButton('all', 'Todas')}
-        {renderFilterButton('unread', 'Não lidas', unreadCount)}
-        {renderFilterButton('prayer', 'Oração', prayerCircles)}
-        {renderFilterButton('archived', 'Arquivadas', archivedCount)}
+      
+      <View style={styles.newMatchesSection}>
+        <Text style={styles.sectionTitle}>Novos Matches</Text>
+        <FlatList
+          horizontal
+          data={MATCHES.slice(0, 2)}
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.newMatchCard}>
+              <View style={styles.matchImageContainer}>
+                <Image source={{ uri: item.image }} style={styles.matchImage} />
+              </View>
+              <Text style={styles.newMatchName}>{item.name}</Text>
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={styles.newMatchesList}
+        />
       </View>
       
-      {filteredConversations.length === 0 ? (
-        <View style={styles.emptyState}>
-          <PrayingHands size={48} color={Theme.colors.text.light} />
-          <Text style={styles.emptyTitle}>
-            {searchQuery ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
-          </Text>
-          <Text style={styles.emptySubtitle}>
-            {searchQuery 
-              ? 'Tente ajustar sua busca'
-              : 'Suas conversas aparecerão aqui quando você começar a se conectar com outros membros'
-            }
-          </Text>
-        </View>
-      ) : (
+      <View style={styles.messagesSection}>
+        <Text style={styles.sectionTitle}>Mensagens</Text>
         <FlatList
-          data={filteredConversations}
+          data={MATCHES}
           keyExtractor={(item) => item.id}
-          renderItem={renderConversation}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.conversationsList}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.messageRow}>
+              <View style={styles.messageImageContainer}>
+                <Image source={{ uri: item.image }} style={styles.messageImage} />
+                {item.lastActive === 'Agora' && (
+                  <View style={styles.onlineIndicator} />
+                )}
+              </View>
+              <View style={styles.messageContent}>
+                <View style={styles.messageHeader}>
+                  <Text style={styles.messageName}>{item.name}, {item.age}</Text>
+                  <Text style={styles.messageTime}>{item.lastActive}</Text>
+                </View>
+                <View style={styles.messagePreview}>
+                  <Text 
+                    style={[
+                      styles.messageText,
+                      item.unread && styles.messageUnread
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.message}
+                  </Text>
+                  {item.unread && (
+                    <View style={styles.unreadBadge}>
+                      <Text style={styles.unreadText}>1</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={styles.messagesList}
         />
-      )}
+      </View>
       
       <TouchableOpacity style={styles.fab}>
         <MessageSquare size={24} color="#fff" />
@@ -178,33 +138,14 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.light,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: Theme.spacing.md,
-    position: 'relative',
+    alignItems: 'center',
   },
   title: {
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xxl,
     color: Theme.colors.primary.blue,
-  },
-  unreadBadge: {
-    position: 'absolute',
-    right: Theme.spacing.md,
-    backgroundColor: Theme.colors.status.error,
-    borderRadius: Theme.borderRadius.circle,
-    minWidth: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  unreadBadgeText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.xs,
-    color: Theme.colors.background.white,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -229,7 +170,7 @@ const styles = StyleSheet.create({
     marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
   },
-  filterIconButton: {
+  filterButton: {
     backgroundColor: Theme.colors.background.white,
     borderRadius: Theme.borderRadius.md,
     padding: Theme.spacing.sm,
@@ -239,54 +180,124 @@ const styles = StyleSheet.create({
     height: 48,
     ...Theme.shadows.small,
   },
-  filtersContainer: {
-    flexDirection: 'row',
+  newMatchesSection: {
     paddingHorizontal: Theme.spacing.md,
-    marginBottom: Theme.spacing.md,
+    marginBottom: Theme.spacing.lg,
   },
-  filterButton: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: Theme.spacing.sm,
-    borderRadius: Theme.borderRadius.md,
-    backgroundColor: Theme.colors.background.white,
-    marginRight: Theme.spacing.sm,
-    ...Theme.shadows.small,
-  },
-  activeFilterButton: {
-    backgroundColor: Theme.colors.primary.blue,
-  },
-  filterButtonText: {
-    fontFamily: Theme.typography.fontFamily.body,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.text.dark,
-  },
-  activeFilterButtonText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    color: Theme.colors.background.white,
-  },
-  conversationsList: {
-    paddingBottom: Theme.spacing.xl,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Theme.spacing.xl,
-  },
-  emptyTitle: {
+  sectionTitle: {
     fontFamily: Theme.typography.fontFamily.subheading,
     fontSize: Theme.typography.fontSize.lg,
     color: Theme.colors.text.dark,
-    marginTop: Theme.spacing.md,
-    marginBottom: Theme.spacing.sm,
-    textAlign: 'center',
+    marginBottom: Theme.spacing.md,
   },
-  emptySubtitle: {
-    fontFamily: Theme.typography.fontFamily.body,
+  newMatchesList: {
+    paddingRight: Theme.spacing.md,
+  },
+  newMatchCard: {
+    alignItems: 'center',
+    marginRight: Theme.spacing.md,
+  },
+  matchImageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: Theme.borderRadius.circle,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: Theme.colors.primary.pink,
+    marginBottom: Theme.spacing.sm,
+  },
+  matchImage: {
+    width: '100%',
+    height: '100%',
+  },
+  newMatchName: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.dark,
+  },
+  messagesSection: {
+    flex: 1,
+    paddingHorizontal: Theme.spacing.md,
+  },
+  messagesList: {
+    paddingBottom: Theme.spacing.lg,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.ui.border,
+  },
+  messageImageContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: Theme.borderRadius.circle,
+    overflow: 'hidden',
+    marginRight: Theme.spacing.md,
+  },
+  messageImage: {
+    width: '100%',
+    height: '100%',
+  },
+  onlineIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: Theme.borderRadius.circle,
+    backgroundColor: Theme.colors.status.success,
+    borderWidth: 2,
+    borderColor: Theme.colors.background.white,
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+  },
+  messageContent: {
+    flex: 1,
+  },
+  messageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.xs,
+  },
+  messageName: {
+    fontFamily: Theme.typography.fontFamily.subheading,
     fontSize: Theme.typography.fontSize.md,
+    color: Theme.colors.text.dark,
+  },
+  messageTime: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.xs,
     color: Theme.colors.text.medium,
-    textAlign: 'center',
-    lineHeight: 22,
+  },
+  messagePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  messageText: {
+    flex: 1,
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: Theme.colors.text.medium,
+  },
+  messageUnread: {
+    fontFamily: Theme.typography.fontFamily.bodyBold,
+    color: Theme.colors.text.dark,
+  },
+  unreadBadge: {
+    backgroundColor: Theme.colors.primary.pink,
+    borderRadius: Theme.borderRadius.circle,
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Theme.spacing.sm,
+  },
+  unreadText: {
+    fontFamily: Theme.typography.fontFamily.subheading,
+    fontSize: Theme.typography.fontSize.xs,
+    color: Theme.colors.background.white,
   },
   fab: {
     position: 'absolute',

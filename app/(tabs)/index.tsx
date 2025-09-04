@@ -1,17 +1,10 @@
-import { useRef, useState, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, Animated, PanResponder } from 'react-native';
+import { useRef, useState } from 'react';
+import { StyleSheet, View, Text, Image, Animated, PanResponder } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
-import { Heart, X, MapPin, Globe, Church, Star, Trophy, Target } from 'lucide-react-native';
+import { Heart, X, MapPin, Globe, Church } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import NotificationBell from '@/components/UI/NotificationBell';
-import NotificationModal from '@/components/UI/NotificationModal';
-import { useNotifications } from '@/hooks/useNotifications';
-import { useGamification } from '@/hooks/useGamification';
-import CompatibilityDisplay from '@/components/UI/CompatibilityDisplay';
-import { CompatibilityAlgorithm, UserProfile } from '@/utils/compatibilityAlgorithm';
-import OptimizedImage from '@/components/UI/OptimizedImage';
 
 // Mock data
 const PROFILES = [
@@ -20,172 +13,35 @@ const PROFILES = [
     name: 'Mariana',
     age: 28,
     denomination: 'Batista',
-    location: {
-      state: 'São Paulo',
-      city: 'São Paulo',
-      coordinates: { latitude: -23.5505, longitude: -46.6333 }
-    },
+    distance: 5,
+    location: 'São Paulo',
     languages: ['Português', 'Inglês'],
-    interests: ['Música', 'Viagens', 'Leitura', 'Ensino', 'Evangelismo'],
-    education: 'Graduação',
-    churchFrequency: 2,
-    children: 0,
-    height: 165,
-    zodiacSign: 'Virgem',
-    favoriteWorship: 'Deus é Deus - Delino Marçal',
-    aboutMe: 'Amo música, viagens e servir ao Senhor. Sou professora, gosto de ler e estou em busca de alguém que compartilhe da mesma fé e valores.',
     verse: 'O amor é paciente, o amor é bondoso. Não inveja, não se vangloria, não se orgulha. 1 Coríntios 13:4',
     image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    photos: ['https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg'],
-    preferences: {
-      ageRange: [25, 35] as [number, number],
-      maxDistance: 50,
-      denominations: ['Batista', 'Presbiteriana'],
-      education: ['Graduação', 'Pós-graduação'],
-      children: 'no-preference',
-      languages: ['Português']
-    },
-    personality: {
-      extroversion: 7,
-      agreeableness: 8,
-      conscientiousness: 9,
-      spirituality: 9,
-      familyOriented: 8
-    },
-    values: {
-      marriageImportance: 9,
-      familyImportance: 9,
-      careerImportance: 7,
-      faithImportance: 10,
-      communityImportance: 8
-    },
-    lifestyle: {
-      smokingTolerance: 'never' as const,
-      drinkingTolerance: 'socially' as const,
-      exerciseFrequency: 3,
-      socialLevel: 6
-    }
   },
   {
     id: '2',
     name: 'João',
     age: 30,
     denomination: 'Católico',
-    location: {
-      state: 'Rio de Janeiro',
-      city: 'Rio de Janeiro',
-      coordinates: { latitude: -22.9068, longitude: -43.1729 }
-    },
+    distance: 8,
+    location: 'Rio de Janeiro',
     languages: ['Português', 'Espanhol'],
-    interests: ['Música', 'Esportes', 'Evangelismo', 'Voluntariado'],
-    education: 'Pós-graduação',
-    churchFrequency: 2,
-    children: 0,
-    height: 180,
-    zodiacSign: 'Leão',
-    favoriteWorship: 'Reckless Love - Cory Asbury',
-    aboutMe: 'Engenheiro apaixonado por servir a Deus e ajudar o próximo.',
     verse: 'Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna. João 3:16',
     image: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    photos: ['https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'],
-    preferences: {
-      ageRange: [24, 32] as [number, number],
-      maxDistance: 100,
-      denominations: ['Batista', 'Presbiteriana'],
-      education: ['Graduação', 'Pós-graduação'],
-      children: 'no-preference',
-      languages: ['Português']
-    },
-    personality: {
-      extroversion: 6,
-      agreeableness: 9,
-      conscientiousness: 8,
-      spirituality: 9,
-      familyOriented: 9
-    },
-    values: {
-      marriageImportance: 9,
-      familyImportance: 10,
-      careerImportance: 8,
-      faithImportance: 10,
-      communityImportance: 9
-    },
-    lifestyle: {
-      smokingTolerance: 'never' as const,
-      drinkingTolerance: 'never' as const,
-      exerciseFrequency: 4,
-      socialLevel: 7
-    }
-  }
+  },
 ];
-
-// Mock current user for compatibility calculation
-const CURRENT_USER: UserProfile = {
-  id: 'current-user',
-  name: 'Ana Clara',
-  age: 27,
-  denomination: 'Batista',
-  location: {
-    state: 'São Paulo',
-    city: 'São Paulo',
-    coordinates: { latitude: -23.5505, longitude: -46.6333 }
-  },
-  languages: ['Português', 'Inglês'],
-  interests: ['Música', 'Viagens', 'Leitura', 'Ensino', 'Evangelismo'],
-  education: 'Graduação',
-  churchFrequency: 2,
-  children: 0,
-  height: 165,
-  zodiacSign: 'Virgem',
-  favoriteWorship: 'Deus é Deus - Delino Marçal',
-  aboutMe: 'Amo música, viagens e servir ao Senhor. Sou professora, gosto de ler e estou em busca de alguém que compartilhe da mesma fé e valores.',
-  verse: 'Mas buscai primeiro o Reino de Deus, e a sua justiça, e todas as coisas vos serão acrescentadas. Mateus 6:33',
-  photos: ['https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg'],
-  preferences: {
-    ageRange: [25, 35],
-    maxDistance: 50,
-    denominations: ['Batista', 'Presbiteriana'],
-    education: ['Graduação', 'Pós-graduação'],
-    children: 'no-preference',
-    languages: ['Português']
-  },
-  personality: {
-    extroversion: 7,
-    agreeableness: 8,
-    conscientiousness: 9,
-    spirituality: 9,
-    familyOriented: 8
-  },
-  values: {
-    marriageImportance: 9,
-    familyImportance: 9,
-    careerImportance: 7,
-    faithImportance: 10,
-    communityImportance: 8
-  },
-  lifestyle: {
-    smokingTolerance: 'never',
-    drinkingTolerance: 'socially',
-    exerciseFrequency: 3,
-    socialLevel: 6
-  }
-};
 
 export default function DiscoverScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
-  const [showCompatibility, setShowCompatibility] = useState(false);
   const swipe = useRef(new Animated.ValueXY()).current;
-  const { sendMatchNotification } = useNotifications();
-  const { handleConnectionMade, userStats, getCurrentLevel } = useGamification();
-  
   const rotation = swipe.x.interpolate({
     inputRange: [-100, 0, 100],
     outputRange: ['-8deg', '0deg', '8deg'],
     extrapolate: 'clamp',
   });
 
-  const panResponder = useMemo(() => PanResponder.create({
+  const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: () => true,
     onPanResponderMove: (_, gesture) => {
       swipe.setValue({ x: gesture.dx, y: gesture.dy });
@@ -198,12 +54,6 @@ export default function DiscoverScreen() {
           toValue: { x: 500, y: gesture.dy },
           useNativeDriver: true,
         }).start(() => {
-          // Send match notification and add gamification points
-          const profile = PROFILES[currentIndex];
-          if (profile) {
-            sendMatchNotification(profile.name);
-            handleConnectionMade();
-          }
           setCurrentIndex(prevIndex => prevIndex + 1);
           swipe.setValue({ x: 0, y: 0 });
         });
@@ -223,25 +73,19 @@ export default function DiscoverScreen() {
         }).start();
       }
     },
-  }), [swipe, currentIndex, sendMatchNotification, handleConnectionMade]);
+  });
 
-  const handleLike = useCallback(() => {
+  const handleLike = () => {
     Animated.spring(swipe, {
       toValue: { x: 500, y: 0 },
       useNativeDriver: true,
     }).start(() => {
-      // Send match notification and add gamification points
-      const profile = PROFILES[currentIndex];
-      if (profile) {
-        sendMatchNotification(profile.name);
-        handleConnectionMade();
-      }
       setCurrentIndex(prevIndex => prevIndex + 1);
       swipe.setValue({ x: 0, y: 0 });
     });
-  }, [swipe, currentIndex, sendMatchNotification, handleConnectionMade]);
+  };
 
-  const handlePass = useCallback(() => {
+  const handlePass = () => {
     Animated.spring(swipe, {
       toValue: { x: -500, y: 0 },
       useNativeDriver: true,
@@ -249,44 +93,15 @@ export default function DiscoverScreen() {
       setCurrentIndex(prevIndex => prevIndex + 1);
       swipe.setValue({ x: 0, y: 0 });
     });
-  }, [swipe]);
-
-  const handleFollow = useCallback(() => {
-    // Here you would implement the follow functionality
-    // For now, we'll just show a visual feedback
-    const profile = PROFILES[currentIndex];
-    console.log(`Following ${profile.name}`);
-  }, [currentIndex]);
-
-  const compatibilityScore = useMemo(() => {
-    if (currentIndex >= PROFILES.length) return null;
-    return CompatibilityAlgorithm.calculateCompatibility(CURRENT_USER, PROFILES[currentIndex]);
-  }, [currentIndex]);
+  };
 
   if (currentIndex >= PROFILES.length) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Bênção Match</Text>
-          <View style={styles.headerRight}>
-            <View style={styles.levelBadge}>
-              <Trophy size={16} color={Theme.colors.primary.gold} />
-              <Text style={styles.levelText}>{getCurrentLevel().level}</Text>
-            </View>
-            <NotificationBell 
-              onPress={() => setNotificationModalVisible(true)}
-              color={Theme.colors.primary.blue}
-            />
-          </View>
-        </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Não há mais perfis disponíveis.</Text>
           <Text style={styles.emptySubtext}>Tente novamente mais tarde ou ajuste seus filtros.</Text>
         </View>
-        <NotificationModal
-          visible={notificationModalVisible}
-          onClose={() => setNotificationModalVisible(false)}
-        />
       </SafeAreaView>
     );
   }
@@ -297,37 +112,7 @@ export default function DiscoverScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Bênção Match</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity 
-            style={styles.pointsBadge}
-            onPress={() => setShowCompatibility(!showCompatibility)}
-            accessible={true}
-            accessibilityLabel={`Compatibilidade ${compatibilityScore?.overall}%`}
-            accessibilityRole="button"
-            accessibilityHint="Toque para ver detalhes de compatibilidade"
-          >
-            <Target size={16} color={Theme.colors.primary.blue} />
-            <Text style={styles.pointsText}>{compatibilityScore?.overall}%</Text>
-          </TouchableOpacity>
-          <View style={styles.levelBadge}>
-            <Trophy size={16} color={Theme.colors.primary.gold} />
-            <Text style={styles.levelText}>{getCurrentLevel().level}</Text>
-          </View>
-          <NotificationBell 
-            onPress={() => setNotificationModalVisible(true)}
-            color={Theme.colors.primary.blue}
-          />
-        </View>
       </View>
-
-      {showCompatibility && compatibilityScore && (
-        <View style={styles.compatibilityContainer}>
-          <CompatibilityDisplay 
-            score={compatibilityScore} 
-            compact 
-          />
-        </View>
-      )}
       
       <View style={styles.cardContainer}>
         <Animated.View
@@ -342,19 +127,8 @@ export default function DiscoverScreen() {
               ]
             }
           ]}
-          accessible={true}
-          accessibilityLabel={`Perfil de ${profile.name}, ${profile.age} anos, ${profile.denomination}`}
-          accessibilityHint="Arraste para a direita para curtir, ou para a esquerda para passar"
         >
-          <OptimizedImage 
-            source={{ uri: profile.image }} 
-            style={styles.image}
-            width={400}
-            height={600}
-            quality={85}
-            format="webp"
-            accessibilityLabel={`Foto de ${profile.name}`}
-          />
+          <Image source={{ uri: profile.image }} style={styles.image} />
           
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.8)']}
@@ -370,7 +144,7 @@ export default function DiscoverScreen() {
               <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
                   <MapPin size={16} color={Theme.colors.text.light} />
-                  <Text style={styles.infoText}>{profile.location.city}, {profile.location.state}</Text>
+                  <Text style={styles.infoText}>{profile.distance} km • {profile.location}</Text>
                 </View>
                 <View style={styles.infoItem}>
                   <Globe size={16} color={Theme.colors.text.light} />
@@ -385,42 +159,13 @@ export default function DiscoverScreen() {
       </View>
       
       <View style={styles.actionsContainer}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.passButton]} 
-          onPress={handlePass}
-          accessible={true}
-          accessibilityLabel="Passar"
-          accessibilityRole="button"
-          accessibilityHint="Toque para passar este perfil"
-        >
+        <TouchableOpacity style={[styles.actionButton, styles.passButton]} onPress={handlePass}>
           <X size={30} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.followButton]} 
-          onPress={handleFollow}
-          accessible={true}
-          accessibilityLabel="Favoritar"
-          accessibilityRole="button"
-          accessibilityHint="Toque para favoritar este perfil"
-        >
-          <Star size={30} color="#fff" fill="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.likeButton]} 
-          onPress={handleLike}
-          accessible={true}
-          accessibilityLabel="Curtir"
-          accessibilityRole="button"
-          accessibilityHint="Toque para curtir este perfil"
-        >
+        <TouchableOpacity style={[styles.actionButton, styles.likeButton]} onPress={handleLike}>
           <Heart size={30} color="#fff" fill="#fff" />
         </TouchableOpacity>
       </View>
-
-      <NotificationModal
-        visible={notificationModalVisible}
-        onClose={() => setNotificationModalVisible(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -431,56 +176,14 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.light,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: Theme.spacing.md,
     paddingVertical: Theme.spacing.md,
+    alignItems: 'center',
   },
   title: {
     fontFamily: Theme.typography.fontFamily.heading,
     fontSize: Theme.typography.fontSize.xxl,
     color: Theme.colors.primary.blue,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pointsBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.background.white,
-    paddingHorizontal: Theme.spacing.sm,
-    paddingVertical: Theme.spacing.xs,
-    borderRadius: Theme.borderRadius.md,
-    marginRight: Theme.spacing.sm,
-    ...Theme.shadows.small,
-  },
-  pointsText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.primary.blue,
-    marginLeft: Theme.spacing.xs,
-  },
-  levelBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.background.white,
-    paddingHorizontal: Theme.spacing.sm,
-    paddingVertical: Theme.spacing.xs,
-    borderRadius: Theme.borderRadius.md,
-    marginRight: Theme.spacing.sm,
-    ...Theme.shadows.small,
-  },
-  levelText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.sm,
-    color: Theme.colors.primary.gold,
-    marginLeft: Theme.spacing.xs,
-  },
-  compatibilityContainer: {
-    marginHorizontal: Theme.spacing.md,
-    marginBottom: Theme.spacing.sm,
   },
   cardContainer: {
     flex: 1,
@@ -564,14 +267,11 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.circle,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: Theme.spacing.sm,
+    marginHorizontal: Theme.spacing.md,
     ...Theme.shadows.small,
   },
   passButton: {
     backgroundColor: Theme.colors.status.error,
-  },
-  followButton: {
-    backgroundColor: Theme.colors.primary.gold,
   },
   likeButton: {
     backgroundColor: Theme.colors.primary.pink,
