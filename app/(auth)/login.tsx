@@ -2,10 +2,30 @@ import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image } from 'reac
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { Mail, Lock, ArrowRight } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
 
 export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const router = useRouter();
+
+  const handleLogin = async () => {
+    if (!email || !password) return;
+    
+    setIsLoading(true);
+    const success = await signIn(email, password);
+    setIsLoading(false);
+    
+    if (success) {
+      router.replace('/(tabs)');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -33,6 +53,8 @@ export default function LoginScreen() {
             placeholderTextColor={Theme.colors.text.medium}
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
           />
         </View>
         
@@ -43,6 +65,8 @@ export default function LoginScreen() {
             placeholder="Senha"
             placeholderTextColor={Theme.colors.text.medium}
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
         </View>
         
@@ -50,12 +74,16 @@ export default function LoginScreen() {
           <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
         </TouchableOpacity>
         
-        <Link href="/(tabs)" asChild>
-          <TouchableOpacity style={styles.loginButton}>
-            <Text style={styles.loginButtonText}>Entrar</Text>
-            <ArrowRight size={20} color="#fff" />
-          </TouchableOpacity>
-        </Link>
+        <TouchableOpacity 
+          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={isLoading}
+        >
+          <Text style={styles.loginButtonText}>
+            {isLoading ? 'Entrando...' : 'Entrar'}
+          </Text>
+          {!isLoading && <ArrowRight size={20} color="#fff" />}
+        </TouchableOpacity>
         
         <Text style={styles.orText}>ou entre com</Text>
         
@@ -70,7 +98,7 @@ export default function LoginScreen() {
         
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Não tem uma conta?</Text>
-          <Link href="/signup" asChild>
+          <Link href="/(auth)/signup" asChild>
             <TouchableOpacity>
               <Text style={styles.signupLink}>Cadastre-se</Text>
             </TouchableOpacity>
@@ -166,6 +194,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Theme.spacing.lg,
+  },
+  loginButtonDisabled: {
+    backgroundColor: Theme.colors.ui.disabled,
   },
   loginButtonText: {
     fontFamily: Theme.typography.fontFamily.subheading,

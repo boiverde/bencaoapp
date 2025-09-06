@@ -1,7 +1,5 @@
-import { ExpoConfig, ConfigContext } from 'expo/config';
-
-export default ({ config }: ConfigContext): ExpoConfig => ({
-  ...config,
+export default {
+  expo: {
   name: "Bênção Match",
   slug: "bencao-match",
   version: "1.0.0",
@@ -95,4 +93,5 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     apiUrl: process.env.EXPO_PUBLIC_API_URL,
     apiKey: process.env.EXPO_PUBLIC_API_KEY
   }
-});
+  }
+};

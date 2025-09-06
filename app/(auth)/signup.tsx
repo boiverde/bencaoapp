@@ -2,10 +2,33 @@ import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView } from 
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { Mail, Lock, User, Calendar, ChevronRight } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
 
 export default function SignupScreen() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
+  const router = useRouter();
+
+  const handleSignup = async () => {
+    if (!name || !email || !password || !confirmPassword) return;
+    if (password !== confirmPassword) return;
+    
+    setIsLoading(true);
+    const success = await signUp(email, password, name);
+    setIsLoading(false);
+    
+    if (success) {
+      router.replace('/(tabs)');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -33,16 +56,8 @@ export default function SignupScreen() {
               placeholder="Nome completo"
               placeholderTextColor={Theme.colors.text.medium}
               autoCapitalize="words"
-            />
-          </View>
-          
-          <View style={styles.inputContainer}>
-            <Calendar size={20} color={Theme.colors.text.medium} />
-            <TextInput
-              style={styles.input}
-              placeholder="Data de nascimento"
-              placeholderTextColor={Theme.colors.text.medium}
-              keyboardType="numeric"
+              value={name}
+              onChangeText={setName}
             />
           </View>
           
@@ -54,6 +69,8 @@ export default function SignupScreen() {
               placeholderTextColor={Theme.colors.text.medium}
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
           
@@ -64,6 +81,8 @@ export default function SignupScreen() {
               placeholder="Senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
+              value={password}
+              onChangeText={setPassword}
             />
           </View>
           
@@ -74,12 +93,20 @@ export default function SignupScreen() {
               placeholder="Confirmar senha"
               placeholderTextColor={Theme.colors.text.medium}
               secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
             />
           </View>
           
-          <TouchableOpacity style={styles.signupButton}>
-            <Text style={styles.signupButtonText}>Criar conta</Text>
-            <ChevronRight size={20} color="#fff" />
+          <TouchableOpacity 
+            style={[styles.signupButton, isLoading && styles.signupButtonDisabled]}
+            onPress={handleSignup}
+            disabled={isLoading}
+          >
+            <Text style={styles.signupButtonText}>
+              {isLoading ? 'Criando...' : 'Criar conta'}
+            </Text>
+            {!isLoading && <ChevronRight size={20} color="#fff" />}
           </TouchableOpacity>
           
           <View style={styles.termsContainer}>
@@ -92,7 +119,7 @@ export default function SignupScreen() {
           
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Já tem uma conta?</Text>
-            <Link href="/login" asChild>
+            <Link href="/(auth)/login" asChild>
               <TouchableOpacity>
                 <Text style={styles.loginLink}>Entrar</Text>
               </TouchableOpacity>
@@ -186,6 +213,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: Theme.spacing.md,
     marginBottom: Theme.spacing.md,
+  },
+  signupButtonDisabled: {
+    backgroundColor: Theme.colors.ui.disabled,
   },
   signupButtonText: {
     fontFamily: Theme.typography.fontFamily.subheading,

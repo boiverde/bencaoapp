@@ -5,7 +5,8 @@ const globalState: { [key: string]: any } = {};
 
 export function useGlobalState<T>(
   key: string,
-  initialState: T
+  initialState: T,
+  options?: { key?: string }
 ): [T, (value: T | ((prev: T) => T)) => void] {
   const [state, setState] = useState<T>(() => {
     return globalState[key] ?? initialState;
