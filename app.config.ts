@@ -7,7 +7,7 @@ export default {
   icon: "./assets/images/icon.png",
   scheme: "bencaomatch",
   userInterfaceStyle: "automatic",
-  platforms: ["ios", "android"],
+  platforms: ["ios", "android", "web"],
   splash: {
     image: "./assets/images/splash.png",
     resizeMode: "contain",

@@ -1,9 +1,22 @@
-import { Tabs } from 'expo-router';
-import { StyleSheet, View, Text } from 'react-native';
+import { Tabs, Redirect } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 import Colors from '@/constants/Colors';
 import { Heart, MessageSquare, Calendar, User, Search } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function TabLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    // You can add a loading spinner here
+    return <View style={styles.loadingContainer} />;
+  }
+
+  if (!isAuthenticated) {
+    // If the user is not authenticated, redirect to the root page.
+    return <Redirect href="/" />;
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -49,6 +62,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => (
+            <User size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
@@ -66,4 +88,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-SemiBold',
     fontSize: 12,
   },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: Colors.background.light,
+  }
 });
