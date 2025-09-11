@@ -1,16 +1,20 @@
 module.exports = function(api) {
   api.cache(true);
+
+  const isDev = process.env.NODE_ENV === 'development';
+  const isProd = process.env.NODE_ENV === 'production';
+
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      // Optional: Enable React Refresh for development
-      process.env.NODE_ENV !== 'production' && 'react-refresh/babel',
-      
-      // Optimize bundle size by removing console statements in production
-      process.env.NODE_ENV === 'production' && ['transform-remove-console', { exclude: ['error', 'warn'] }],
-      
-      // Reanimated plugin (if you're using react-native-reanimated)
+      // Enable React Refresh only in development
+      isDev && 'react-refresh/babel',
+
+      // Remove console logs in production
+      isProd && ['transform-remove-console', { exclude: ['error', 'warn'] }],
+
+      // Reanimated plugin must be last
       'react-native-reanimated/plugin',
-    ].filter(Boolean),
+    ].filter(Boolean), // Filter out any falsey values from the plugins array
   };
 };

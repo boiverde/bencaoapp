@@ -7,7 +7,7 @@ export default {
   icon: "./assets/images/icon.png",
   scheme: "bencaomatch",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
+  platforms: ["ios", "android"],
   splash: {
     image: "./assets/images/splash.png",
     resizeMode: "contain",
@@ -42,15 +42,9 @@ export default {
       "ACCESS_FINE_LOCATION"
     ]
   },
-  web: {
-    bundler: "metro",
-    output: "server",
-    favicon: "./assets/images/favicon.png"
-  },
   plugins: [
     "expo-router", 
     "expo-font", 
-    "expo-web-browser",
     [
       "expo-notifications",
       {
