@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "start": "EXPO_WEB_ORIGIN=https://8081-firebase-bencaoapp-1757566995419.cluster-fsmcisrvfbb5cr5mvra3hr3qyg.cloudworkstations.dev EXPO_NO_TELEMETRY=1 expo start --web --clear",
     "dev": "EXPO_NO_TELEMETRY=1 expo start",
     "lint": "expo lint",
     "test": "jest",
@@ -20,6 +21,7 @@
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@supabase/supabase-js": "^2.57.4",
+    "base64-arraybuffer": "^1.0.2",
     "expo": "^53.0.0",
     "expo-blur": "~14.1.3",
     "expo-camera": "~16.1.5",

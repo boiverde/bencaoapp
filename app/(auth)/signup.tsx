@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
 import { Link, useRouter } from 'expo-router';
-import { Mail, Lock, User, Calendar, ChevronRight } from 'lucide-react-native';
+import { Mail, Lock, User, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 
@@ -12,17 +12,18 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { signUp } = useAuth();
+  const { signUp, error: authError, isLoading } = useAuth(); // Obter o estado de erro e de loading
   const router = useRouter();
 
   const handleSignup = async () => {
     if (!name || !email || !password || !confirmPassword) return;
-    if (password !== confirmPassword) return;
+    if (password !== confirmPassword) {
+      // Idealmente, o estado de erro da UI devia ser gerido localmente para isto
+      console.log("As senhas não coincidem");
+      return;
+    }
     
-    setIsLoading(true);
     const success = await signUp(email, password, name);
-    setIsLoading(false);
     
     if (success) {
       router.replace('/(tabs)');
@@ -48,6 +49,13 @@ export default function SignupScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Criar Conta</Text>
           <Text style={styles.cardSubtitle}>Preencha seus dados para começar</Text>
+          
+          {/* Mostra a mensagem de erro de autenticação */}
+          {authError && (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{authError}</Text>
+            </View>
+          )}
           
           <View style={styles.inputContainer}>
             <User size={20} color={Theme.colors.text.medium} />
@@ -188,6 +196,18 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.medium,
     marginBottom: Theme.spacing.lg,
   },
+  errorContainer: {
+    backgroundColor: '#F8D7DA',
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
+  },
+  errorText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    color: '#721C24',
+    fontSize: Theme.typography.fontSize.sm,
+    textAlign: 'center',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -209,7 +229,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.primary.blue,
     borderRadius: Theme.borderRadius.md,
     paddingVertical: Theme.spacing.md,
-    alignItems: 'center',
+alignItems: 'center',
     justifyContent: 'center',
     marginTop: Theme.spacing.md,
     marginBottom: Theme.spacing.md,

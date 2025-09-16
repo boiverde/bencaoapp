@@ -1,8 +1,8 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import Theme from '@/constants/Theme';
-import { Link, useRouter } from 'expo-router';
+import { Link, useRouter, Redirect } from 'expo-router';
 import { Mail, Lock, ArrowRight } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
@@ -10,19 +10,44 @@ import { useState } from 'react';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, isAuthenticated, isLoading: isAuthLoading, error } = useAuth();
   const router = useRouter();
 
+  if (isAuthLoading) {
+    return (
+      <View style={styles.container}>
+          <StatusBar style="light" />
+          <LinearGradient colors={[Theme.colors.primary.blue, Theme.colors.primary.lilac, Theme.colors.primary.pink]} style={styles.background} />
+      </View>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
+
   const handleLogin = async () => {
-    if (!email || !password) return;
+    console.log("Attempting to log in...");
+    console.log("Email:", email);
+
+    if (!email || !password) {
+      console.log("Login failed: Email or password is empty.");
+      return;
+    }
     
-    setIsLoading(true);
-    const success = await signIn(email, password);
-    setIsLoading(false);
-    
-    if (success) {
-      router.replace('/(tabs)');
+    setIsSubmitting(true);
+    try {
+      const success = await signIn(email, password);
+      console.log("Sign-in result (success):", success);
+      
+      if (!success) {
+          console.log("Sign-in was not successful, re-enabling button.");
+          setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("An error occurred during sign-in:", error);
+      setIsSubmitting(false);
     }
   };
 
@@ -74,15 +99,17 @@ export default function LoginScreen() {
           <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
         </TouchableOpacity>
         
+        {error && <Text style={styles.errorText}>{error}</Text>}
+
         <TouchableOpacity 
-          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+          style={[styles.loginButton, isSubmitting && styles.loginButtonDisabled]}
           onPress={handleLogin}
-          disabled={isLoading}
+          disabled={isSubmitting}
         >
           <Text style={styles.loginButtonText}>
-            {isLoading ? 'Entrando...' : 'Entrar'}
+            {isSubmitting ? 'Entrando...' : 'Entrar'}
           </Text>
-          {!isLoading && <ArrowRight size={20} color="#fff" />}
+          {!isSubmitting && <ArrowRight size={20} color="#fff" />}
         </TouchableOpacity>
         
         <Text style={styles.orText}>ou entre com</Text>
@@ -253,5 +280,12 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  errorText: {
+    fontFamily: Theme.typography.fontFamily.body,
+    fontSize: Theme.typography.fontSize.sm,
+    color: 'red', /* CORRIGIDO: Usar uma cor que funciona */
+    textAlign: 'center',
+    marginBottom: Theme.spacing.md,
   },
 });
