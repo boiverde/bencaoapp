@@ -19,14 +19,14 @@ interface SocialState {
   filterFeed: (filters: any) => void;
 }
 
-// Função de conversão simplificada
-const fromSupabasePost = (data: any): SocialPost => {
+// Função de conversão que aceita o mapa de utilizadores
+const fromSupabasePost = (data: any, users: { [key: string]: string }): SocialPost => {
   return {
     id: data.id,
     userId: data.user_id,
     content: data.content,
     createdAt: new Date(data.created_at).getTime(),
-    author_name: 'Utilizador Desconhecido', // Solução temporária para estabilizar
+    author_name: users[data.user_id] || 'Utilizador Desconhecido', // Usa o mapa
     likes: data.likes || [],
     comments: data.comments || [],
     prayers: data.prayers || [],
@@ -55,7 +55,7 @@ export const useSocial = create<SocialState>((set, get) => ({
   initializeSocial: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Apenas busca as publicações, sem tentar buscar os nomes dos utilizadores
+      // 1. Buscar as publicações
       const { data: feedData, error: feedError } = await supabase
         .from('posts')
         .select('*')
@@ -63,8 +63,24 @@ export const useSocial = create<SocialState>((set, get) => ({
 
       if (feedError) throw new Error(`Feed Error: ${feedError.message}`);
 
-      // Mapeia os posts com o nome de autor provisório
-      set({ feed: feedData.map(post => fromSupabasePost(post)), isLoading: false });
+      const userIds = [...new Set(feedData.map(p => p.user_id))];
+      
+      // 2. Tentar buscar os nomes dos utilizadores usando a coluna 'name'
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, name') // TENTATIVA: usar a coluna 'name'
+        .in('id', userIds);
+      
+      if (usersError) throw new Error(`Users Error: ${usersError.message}`);
+
+      // 3. Criar mapa de ID -> Nome
+      const usersMap = usersData.reduce((acc, user) => {
+        acc[user.id] = user.name; // TENTATIVA: usar user.name
+        return acc;
+      }, {} as { [key: string]: string });
+      
+      // 4. Mapear os posts com os nomes dos autores, se encontrados
+      set({ feed: feedData.map(post => fromSupabasePost(post, usersMap)), isLoading: false });
 
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
