@@ -1,35 +1,40 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
-import { SocialPost as SocialPostType, SocialComment, SocialGroup, SocialEvent } from '@/utils/socialSystem';
-
-export interface SocialPost extends SocialPostType {
-  author_name?: string;
-}
+import { SocialPost, SocialComment, SocialGroup, SocialEvent, SocialNotification } from '@/utils/socialSystem';
 
 interface SocialState {
   feed: SocialPost[];
   groups: SocialGroup[];
   events: SocialEvent[];
+  socialNotifications: SocialNotification[];
   following: string[];
   error: string | null;
   isLoading: boolean;
   initializeSocial: (userId: string) => Promise<void>;
   refreshFeed: () => Promise<void>;
-  createPost: (post: Omit<SocialPost, 'id' | 'createdAt' | 'likes' | 'comments' | 'shares' | 'prayerCount' | 'author_name'>) => Promise<void>;
+  createPost: (post: Omit<SocialPost, 'id' | 'createdAt' | 'likes' | 'comments' | 'shares' | 'prayerCount'>) => Promise<void>;
+  likePost: (postId: string) => Promise<void>;
+  commentOnPost: (postId: string, content: string) => Promise<void>;
+  prayForPost: (postId: string) => Promise<void>;
+  sharePost: (postId: string) => Promise<void>;
+  joinGroup: (groupId: string) => Promise<void>;
+  attendEvent: (eventId: string) => Promise<void>;
+  markInterestedInEvent: (eventId: string) => Promise<void>;
+  markNotificationAsRead: (notificationId: string) => void;
+  markAllNotificationsAsRead: () => void;
+  getUnreadNotificationsCount: () => number;
   filterFeed: (filters: any) => void;
 }
 
-// Função de conversão que aceita o mapa de utilizadores
+// Função de conversão que aceita o mapa de usuários
 const fromSupabasePost = (data: any, users: { [key: string]: string }): SocialPost => {
   return {
     id: data.id,
     userId: data.user_id,
     content: data.content,
     createdAt: new Date(data.created_at).getTime(),
-    author_name: users[data.user_id] || 'Utilizador Desconhecido', // Usa o mapa
-    likes: data.likes || [],
-    comments: data.comments || [],
-    prayers: data.prayers || [],
+    likes: [], // Will be loaded separately
+    comments: [], // Will be loaded separately
     shares: data.shares || 0,
     tags: data.tags || [],
     type: data.type || 'verse',
@@ -46,16 +51,15 @@ export const useSocial = create<SocialState>((set, get) => ({
   feed: [],
   groups: [],
   events: [],
+  socialNotifications: [],
   following: [],
   error: null,
   isLoading: true,
   
-  getUnreadNotificationsCount: () => 0,
-
   initializeSocial: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      // 1. Buscar as publicações
+      // 1. Buscar publicações
       const { data: feedData, error: feedError } = await supabase
         .from('posts')
         .select('*')
@@ -63,28 +67,49 @@ export const useSocial = create<SocialState>((set, get) => ({
 
       if (feedError) throw new Error(`Feed Error: ${feedError.message}`);
 
-      const userIds = [...new Set(feedData.map(p => p.user_id))];
+      // 2. Buscar grupos (mock data por enquanto)
+      const mockGroups: SocialGroup[] = [];
       
-      // 2. Tentar buscar os nomes dos utilizadores usando a coluna 'name'
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, name') // TENTATIVA: usar a coluna 'name'
-        .in('id', userIds);
+      // 3. Buscar eventos
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*')
+        .order('start_date', { ascending: true });
       
-      if (usersError) throw new Error(`Users Error: ${usersError.message}`);
+      if (eventsError) console.warn('Events Error:', eventsError.message);
 
-      // 3. Criar mapa de ID -> Nome
-      const usersMap = usersData.reduce((acc, user) => {
-        acc[user.id] = user.name; // TENTATIVA: usar user.name
-        return acc;
-      }, {} as { [key: string]: string });
+      // 4. Criar mapa de usuários (mock por enquanto)
+      const usersMap = {};
       
-      // 4. Mapear os posts com os nomes dos autores, se encontrados
-      set({ feed: feedData.map(post => fromSupabasePost(post, usersMap)), isLoading: false });
+      // 5. Mapear os posts
+      const mappedPosts = feedData ? feedData.map(post => fromSupabasePost(post, usersMap)) : [];
+      
+      // 6. Mock notifications
+      const mockNotifications: SocialNotification[] = [
+        {
+          id: 'notif_1',
+          userId: userId,
+          type: 'like',
+          sourceId: 'post_1',
+          sourceType: 'post',
+          actorId: 'user_2',
+          content: 'João curtiu sua publicação',
+          read: false,
+          createdAt: Date.now() - 3600000
+        }
+      ];
+      
+      set({ 
+        feed: mappedPosts,
+        groups: mockGroups,
+        events: eventsData || [],
+        socialNotifications: mockNotifications,
+        isLoading: false 
+      });
 
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
-      console.error("Error initializing social data:", error.message);
+      console.error("Error initializing social data:", error);
     }
   },
   
@@ -100,7 +125,6 @@ export const useSocial = create<SocialState>((set, get) => ({
         media_urls: post.mediaUrls,
         location: post.location,
         event_details: post.eventDetails,
-        group_id: post.groupId,
         verse: post.type === 'verse' ? post.verse : null,
       };
 
@@ -119,6 +143,105 @@ export const useSocial = create<SocialState>((set, get) => ({
     }
   },
 
+  likePost: async (postId: string) => {
+    try {
+      // Implementar like no banco de dados
+      const { error } = await supabase
+        .from('post_likes')
+        .upsert({ post_id: postId, user_id: 'current_user' });
+      
+      if (error) throw error;
+      await get().refreshFeed();
+    } catch (error: any) {
+      console.error('Error liking post:', error);
+    }
+  },
+
+  commentOnPost: async (postId: string, content: string) => {
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .insert({ post_id: postId, user_id: 'current_user', content });
+      
+      if (error) throw error;
+      await get().refreshFeed();
+    } catch (error: any) {
+      console.error('Error commenting on post:', error);
+    }
+  },
+
+  prayForPost: async (postId: string) => {
+    try {
+      // Incrementar prayer count
+      const { error } = await supabase
+        .from('posts')
+        .update({ prayer_count: supabase.sql`prayer_count + 1` })
+        .eq('id', postId);
+      
+      if (error) throw error;
+      await get().refreshFeed();
+    } catch (error: any) {
+      console.error('Error praying for post:', error);
+    }
+  },
+
+  sharePost: async (postId: string) => {
+    try {
+      // Incrementar share count
+      const { error } = await supabase
+        .from('posts')
+        .update({ shares: supabase.sql`shares + 1` })
+        .eq('id', postId);
+      
+      if (error) throw error;
+      await get().refreshFeed();
+    } catch (error: any) {
+      console.error('Error sharing post:', error);
+    }
+  },
+
+  joinGroup: async (groupId: string) => {
+    // Mock implementation
+    console.log('Joining group:', groupId);
+  },
+
+  attendEvent: async (eventId: string) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({ 
+          attendees: supabase.sql`array_append(attendees, '${supabase.auth.getUser().data.user?.id}')` 
+        })
+        .eq('id', eventId);
+      
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error attending event:', error);
+    }
+  },
+
+  markInterestedInEvent: async (eventId: string) => {
+    console.log('Marking interested in event:', eventId);
+  },
+
+  markNotificationAsRead: (notificationId: string) => {
+    set(state => ({
+      socialNotifications: state.socialNotifications.map(notif =>
+        notif.id === notificationId ? { ...notif, read: true } : notif
+      )
+    }));
+  },
+
+  markAllNotificationsAsRead: () => {
+    set(state => ({
+      socialNotifications: state.socialNotifications.map(notif => ({ ...notif, read: true }))
+    }));
+  },
+
+  getUnreadNotificationsCount: () => {
+    const state = get();
+    return state.socialNotifications.filter(notif => !notif.read).length;
+  },
   refreshFeed: async () => {
     const session = await supabase.auth.getSession();
     const userId = session?.data?.session?.user.id;

@@ -16,7 +16,6 @@ import {
   Users, 
   MessageCircle, 
   AtSign, 
-  Trash2, 
   CheckCheck 
 } from 'lucide-react-native';
 import Theme from '@/constants/Theme';
@@ -44,7 +43,6 @@ export default function SocialNotificationsList({
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // In a real app, this would refresh notifications from the API
     setTimeout(() => {
       setRefreshing(false);
     }, 1000);

@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, FlatList, Image, TextInput, KeyboardAvoidingVie
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
 import { Send, Book, HandHelping as PrayingHands } from 'lucide-react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { TouchableOpacity } from 'react-native';
 
 // Mock data
 const MESSAGES = [

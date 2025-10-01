@@ -12,8 +12,6 @@ import Theme from '@/constants/Theme';
 import { Search, Filter, Bell, Users, Calendar, Book, Heart } from 'lucide-react-native';
 import { useSocial } from '@/hooks/useSocial';
 import SocialFeed from '@/components/Social/SocialFeed';
-import SocialGroupCard from '@/components/Social/SocialGroupCard';
-import SocialEventCard from '@/components/Social/SocialEventCard';
 import SocialNotificationsList from '@/components/Social/SocialNotificationsList';
 import { SocialPost, SocialGroup, SocialEvent } from '@/utils/socialSystem';
 
@@ -28,8 +26,8 @@ export default function CommunityScreen() {
     feed, 
     groups, 
     events, 
-    joinGroup, 
-    attendEvent, 
+    joinGroup,
+    attendEvent,
     markInterestedInEvent,
     getUnreadNotificationsCount
   } = useSocial();
@@ -58,54 +56,24 @@ export default function CommunityScreen() {
       
       case 'groups':
         return (
-          <FlatList
-            data={groups}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <SocialGroupCard 
-                group={item}
-                onJoin={() => handleJoinGroup(item.id)}
-                isMember={item.memberIds.includes('current_user')}
-              />
-            )}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Users size={48} color={Theme.colors.text.light} />
-                <Text style={styles.emptyTitle}>Nenhum grupo encontrado</Text>
-                <Text style={styles.emptySubtitle}>
-                  Crie ou participe de grupos para compartilhar sua fé
-                </Text>
-              </View>
-            }
-          />
+          <View style={styles.emptyContainer}>
+            <Users size={48} color={Theme.colors.text.light} />
+            <Text style={styles.emptyTitle}>Grupos em Desenvolvimento</Text>
+            <Text style={styles.emptySubtitle}>
+              Esta funcionalidade será implementada em breve
+            </Text>
+          </View>
         );
       
       case 'events':
         return (
-          <FlatList
-            data={events}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <SocialEventCard 
-                event={item}
-                onAttend={() => handleAttendEvent(item.id)}
-                onInterested={() => handleInterestedInEvent(item.id)}
-                isAttending={item.attendeeIds.includes('current_user')}
-                isInterested={item.interestedIds.includes('current_user')}
-              />
-            )}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Calendar size={48} color={Theme.colors.text.light} />
-                <Text style={styles.emptyTitle}>Nenhum evento encontrado</Text>
-                <Text style={styles.emptySubtitle}>
-                  Crie ou participe de eventos para se conectar com a comunidade
-                </Text>
-              </View>
-            }
-          />
+          <View style={styles.emptyContainer}>
+            <Calendar size={48} color={Theme.colors.text.light} />
+            <Text style={styles.emptyTitle}>Eventos em Desenvolvimento</Text>
+            <Text style={styles.emptySubtitle}>
+              Esta funcionalidade será implementada em breve
+            </Text>
+          </View>
         );
       
       case 'notifications':

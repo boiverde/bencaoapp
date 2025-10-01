@@ -23,8 +23,6 @@ import Theme from '@/constants/Theme';
 import { useSocial } from '@/hooks/useSocial';
 import { SocialPost } from '@/utils/socialSystem';
 import SocialPostCard from './SocialPostCard';
-import CreatePostModal from './CreatePostModal';
-import FeedFilterModal from './FeedFilterModal';
 
 // Use FlatList from react-native-web for web platform
 const FlatList = RNFlatList;
@@ -44,8 +42,6 @@ export default function SocialFeed({
 }: SocialFeedProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [createPostModalVisible, setCreatePostModalVisible] = useState(false);
-  const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [activeFilter, setActiveFilter] = useState<SocialPost['type'] | 'all'>(initialFilter || 'all');
   
   const { feed, isLoading, refreshFeed, filterFeed } = useSocial();
@@ -56,20 +52,6 @@ export default function SocialFeed({
     setRefreshing(true);
     await refreshFeed();
     setRefreshing(false);
-  };
-
-  const handleCreatePost = () => {
-    setCreatePostModalVisible(true);
-  };
-
-  const handlePostCreated = () => {
-    setCreatePostModalVisible(false);
-    refreshFeed();
-    
-    // Scroll to top to show the new post
-    if (flatListRef.current) {
-      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
-    }
   };
 
   const handleFilterPress = (filter: SocialPost['type'] | 'all') => {
@@ -84,8 +66,6 @@ export default function SocialFeed({
 
   const handleSearch = (text: string) => {
     setSearchQuery(text);
-    // In a real app, this would trigger a search API call
-    // For now, we'll just simulate filtering locally
   };
 
   const filteredFeed = searchQuery
@@ -127,14 +107,6 @@ export default function SocialFeed({
           ? 'Tente ajustar sua busca ou filtros'
           : 'Seja o primeiro a compartilhar algo com a comunidade'}
       </Text>
-      {showCreatePost && (
-        <TouchableOpacity 
-          style={styles.createFirstPostButton}
-          onPress={handleCreatePost}
-        >
-          <Text style={styles.createFirstPostText}>Criar Publicação</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 
@@ -151,15 +123,6 @@ export default function SocialFeed({
             onChangeText={handleSearch}
           />
         </View>
-        
-        {showFilters && (
-          <TouchableOpacity 
-            style={styles.filterIconButton}
-            onPress={() => setFilterModalVisible(true)}
-          >
-            <Filter size={20} color={Theme.colors.primary.blue} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {showFilters && (
@@ -202,30 +165,6 @@ export default function SocialFeed({
           ListEmptyComponent={renderEmptyComponent}
         />
       )}
-
-      {showCreatePost && (
-        <TouchableOpacity 
-          style={styles.createPostButton}
-          onPress={handleCreatePost}
-        >
-          <Plus size={24} color="#fff" />
-        </TouchableOpacity>
-      )}
-
-      <CreatePostModal
-        visible={createPostModalVisible}
-        onClose={() => setCreatePostModalVisible(false)}
-        onPostCreated={handlePostCreated}
-      />
-
-      <FeedFilterModal
-        visible={filterModalVisible}
-        onClose={() => setFilterModalVisible(false)}
-        onApplyFilters={(filters) => {
-          filterFeed(filters);
-          setFilterModalVisible(false);
-        }}
-      />
     </View>
   );
 }
@@ -257,14 +196,6 @@ const styles = StyleSheet.create({
     paddingVertical: Theme.spacing.sm,
     marginLeft: Theme.spacing.sm,
     color: Theme.colors.text.dark,
-  },
-  filterIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.background.light,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   filtersContainer: {
     paddingVertical: Theme.spacing.sm,
@@ -328,28 +259,5 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.medium,
     textAlign: 'center',
     marginBottom: Theme.spacing.lg,
-  },
-  createFirstPostButton: {
-    backgroundColor: Theme.colors.primary.blue,
-    paddingHorizontal: Theme.spacing.lg,
-    paddingVertical: Theme.spacing.md,
-    borderRadius: Theme.borderRadius.md,
-  },
-  createFirstPostText: {
-    fontFamily: Theme.typography.fontFamily.subheading,
-    fontSize: Theme.typography.fontSize.md,
-    color: Theme.colors.background.white,
-  },
-  createPostButton: {
-    position: 'absolute',
-    right: Theme.spacing.md,
-    bottom: Theme.spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: Theme.borderRadius.circle,
-    backgroundColor: Theme.colors.primary.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Theme.shadows.medium,
   },
 });

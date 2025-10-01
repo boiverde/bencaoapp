@@ -2,7 +2,7 @@ import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Theme from '@/constants/Theme';
 import { Search, MessageSquare, Filter } from 'lucide-react-native';
-import { TextInput } from 'react-native-gesture-handler';
+import { TextInput } from 'react-native';
 
 // Mock data
 const MATCHES = [
