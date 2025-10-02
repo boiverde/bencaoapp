@@ -7,6 +7,7 @@ import { OpenSans_400Regular, OpenSans_600SemiBold } from '@expo-google-fonts/op
 import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
 
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { SocialProvider } from '@/hooks/useSocial';
 import { ErrorBoundary } from '@/utils/errorBoundary';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 
@@ -69,7 +70,9 @@ export default function RootLayout() {
     <>
       <ErrorBoundary>
         <AuthProvider>
-          <RootLayoutNav />
+          <SocialProvider>
+            <RootLayoutNav />
+          </SocialProvider>
         </AuthProvider>
       </ErrorBoundary>
       <StatusBar style="auto" />

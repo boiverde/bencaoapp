@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { SocialPost, SocialComment, SocialGroup, SocialEvent, SocialNotification } from '@/utils/socialSystem';
 
@@ -10,6 +10,9 @@ interface SocialState {
   following: string[];
   error: string | null;
   isLoading: boolean;
+}
+
+interface SocialContextType extends SocialState {
   initializeSocial: (userId: string) => Promise<void>;
   refreshFeed: () => Promise<void>;
   createPost: (post: Omit<SocialPost, 'id' | 'createdAt' | 'likes' | 'comments' | 'shares' | 'prayerCount'>) => Promise<void>;
@@ -26,40 +29,42 @@ interface SocialState {
   filterFeed: (filters: any) => void;
 }
 
-// Função de conversão que aceita o mapa de usuários
+const SocialContext = createContext<SocialContextType | undefined>(undefined);
+
 const fromSupabasePost = (data: any, users: { [key: string]: string }): SocialPost => {
   return {
     id: data.id,
     userId: data.user_id,
     content: data.content,
     createdAt: new Date(data.created_at).getTime(),
-    likes: [], // Will be loaded separately
-    comments: [], // Will be loaded separately
+    likes: [],
+    comments: [],
     shares: data.shares || 0,
     tags: data.tags || [],
     type: data.type || 'verse',
     mediaUrls: data.media_urls || [],
     visibility: data.visibility || 'public',
     location: data.location,
-    verse: data.verse, 
+    verse: data.verse,
     eventDetails: data.event_details,
     prayerCount: data.prayer_count || 0,
   };
 };
 
-export const useSocial = create<SocialState>((set, get) => ({
-  feed: [],
-  groups: [],
-  events: [],
-  socialNotifications: [],
-  following: [],
-  error: null,
-  isLoading: true,
-  
-  initializeSocial: async (userId: string) => {
-    set({ isLoading: true, error: null });
+export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [state, setState] = useState<SocialState>({
+    feed: [],
+    groups: [],
+    events: [],
+    socialNotifications: [],
+    following: [],
+    error: null,
+    isLoading: true,
+  });
+
+  const initializeSocial = useCallback(async (userId: string) => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      // 1. Buscar publicações
       const { data: feedData, error: feedError } = await supabase
         .from('posts')
         .select('*')
@@ -67,24 +72,18 @@ export const useSocial = create<SocialState>((set, get) => ({
 
       if (feedError) throw new Error(`Feed Error: ${feedError.message}`);
 
-      // 2. Buscar grupos (mock data por enquanto)
       const mockGroups: SocialGroup[] = [];
-      
-      // 3. Buscar eventos
+
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*')
         .order('start_date', { ascending: true });
-      
+
       if (eventsError) console.warn('Events Error:', eventsError.message);
 
-      // 4. Criar mapa de usuários (mock por enquanto)
       const usersMap = {};
-      
-      // 5. Mapear os posts
       const mappedPosts = feedData ? feedData.map(post => fromSupabasePost(post, usersMap)) : [];
-      
-      // 6. Mock notifications
+
       const mockNotifications: SocialNotification[] = [
         {
           id: 'notif_1',
@@ -98,23 +97,24 @@ export const useSocial = create<SocialState>((set, get) => ({
           createdAt: Date.now() - 3600000
         }
       ];
-      
-      set({ 
+
+      setState(prev => ({
+        ...prev,
         feed: mappedPosts,
         groups: mockGroups,
         events: eventsData || [],
         socialNotifications: mockNotifications,
-        isLoading: false 
-      });
+        isLoading: false
+      }));
 
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      setState(prev => ({ ...prev, error: error.message, isLoading: false }));
       console.error("Error initializing social data:", error);
     }
-  },
-  
-  createPost: async (post) => {
-    set({ error: null });
+  }, []);
+
+  const createPost = useCallback(async (post: Omit<SocialPost, 'id' | 'createdAt' | 'likes' | 'comments' | 'shares' | 'prayerCount'>) => {
+    setState(prev => ({ ...prev, error: null }));
     try {
       const postForDb = {
         user_id: post.userId,
@@ -128,127 +128,151 @@ export const useSocial = create<SocialState>((set, get) => ({
         verse: post.type === 'verse' ? post.verse : null,
       };
 
-      const { data, error } = await supabase.from('posts').insert(postForDb);
+      const { error } = await supabase.from('posts').insert(postForDb);
 
       if (error) {
         console.error("Supabase error:", error);
         throw new Error(`Error creating post: ${error.message}`);
       }
-      
-      await get().refreshFeed();
+
+      await refreshFeed();
 
     } catch (error: any) {
-      set({ error: error.message });
+      setState(prev => ({ ...prev, error: error.message }));
       throw error;
     }
-  },
+  }, []);
 
-  likePost: async (postId: string) => {
+  const likePost = useCallback(async (postId: string) => {
     try {
-      // Implementar like no banco de dados
       const { error } = await supabase
         .from('post_likes')
         .upsert({ post_id: postId, user_id: 'current_user' });
-      
+
       if (error) throw error;
-      await get().refreshFeed();
+      await refreshFeed();
     } catch (error: any) {
       console.error('Error liking post:', error);
     }
-  },
+  }, []);
 
-  commentOnPost: async (postId: string, content: string) => {
+  const commentOnPost = useCallback(async (postId: string, content: string) => {
     try {
       const { error } = await supabase
         .from('comments')
         .insert({ post_id: postId, user_id: 'current_user', content });
-      
+
       if (error) throw error;
-      await get().refreshFeed();
+      await refreshFeed();
     } catch (error: any) {
       console.error('Error commenting on post:', error);
     }
-  },
+  }, []);
 
-  prayForPost: async (postId: string) => {
+  const prayForPost = useCallback(async (postId: string) => {
     try {
-      // Incrementar prayer count
-      const { error } = await supabase
-        .from('posts')
-        .update({ prayer_count: supabase.sql`prayer_count + 1` })
-        .eq('id', postId);
-      
+      const { error } = await supabase.rpc('increment_prayer_count', { post_id: postId });
+
       if (error) throw error;
-      await get().refreshFeed();
+      await refreshFeed();
     } catch (error: any) {
       console.error('Error praying for post:', error);
     }
-  },
+  }, []);
 
-  sharePost: async (postId: string) => {
+  const sharePost = useCallback(async (postId: string) => {
     try {
-      // Incrementar share count
-      const { error } = await supabase
-        .from('posts')
-        .update({ shares: supabase.sql`shares + 1` })
-        .eq('id', postId);
-      
+      const { error } = await supabase.rpc('increment_share_count', { post_id: postId });
+
       if (error) throw error;
-      await get().refreshFeed();
+      await refreshFeed();
     } catch (error: any) {
       console.error('Error sharing post:', error);
     }
-  },
+  }, []);
 
-  joinGroup: async (groupId: string) => {
-    // Mock implementation
+  const joinGroup = useCallback(async (groupId: string) => {
     console.log('Joining group:', groupId);
-  },
+  }, []);
 
-  attendEvent: async (eventId: string) => {
+  const attendEvent = useCallback(async (eventId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { error } = await supabase
-        .from('events')
-        .update({ 
-          attendees: supabase.sql`array_append(attendees, '${supabase.auth.getUser().data.user?.id}')` 
-        })
-        .eq('id', eventId);
-      
+        .from('event_attendees')
+        .insert({ event_id: eventId, user_id: user.id });
+
       if (error) throw error;
     } catch (error: any) {
       console.error('Error attending event:', error);
     }
-  },
+  }, []);
 
-  markInterestedInEvent: async (eventId: string) => {
+  const markInterestedInEvent = useCallback(async (eventId: string) => {
     console.log('Marking interested in event:', eventId);
-  },
+  }, []);
 
-  markNotificationAsRead: (notificationId: string) => {
-    set(state => ({
-      socialNotifications: state.socialNotifications.map(notif =>
+  const markNotificationAsRead = useCallback((notificationId: string) => {
+    setState(prev => ({
+      ...prev,
+      socialNotifications: prev.socialNotifications.map(notif =>
         notif.id === notificationId ? { ...notif, read: true } : notif
       )
     }));
-  },
+  }, []);
 
-  markAllNotificationsAsRead: () => {
-    set(state => ({
-      socialNotifications: state.socialNotifications.map(notif => ({ ...notif, read: true }))
+  const markAllNotificationsAsRead = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      socialNotifications: prev.socialNotifications.map(notif => ({ ...notif, read: true }))
     }));
-  },
+  }, []);
 
-  getUnreadNotificationsCount: () => {
-    const state = get();
+  const getUnreadNotificationsCount = useCallback(() => {
     return state.socialNotifications.filter(notif => !notif.read).length;
-  },
-  refreshFeed: async () => {
+  }, [state.socialNotifications]);
+
+  const refreshFeed = useCallback(async () => {
     const session = await supabase.auth.getSession();
     const userId = session?.data?.session?.user.id;
     if (userId) {
-      await get().initializeSocial(userId);
+      await initializeSocial(userId);
     }
-  },
+  }, [initializeSocial]);
 
-  filterFeed: (filters: any) => {},
-}));
+  const filterFeed = useCallback((filters: any) => {}, []);
+
+  const value: SocialContextType = {
+    ...state,
+    initializeSocial,
+    refreshFeed,
+    createPost,
+    likePost,
+    commentOnPost,
+    prayForPost,
+    sharePost,
+    joinGroup,
+    attendEvent,
+    markInterestedInEvent,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    getUnreadNotificationsCount,
+    filterFeed,
+  };
+
+  return (
+    <SocialContext.Provider value={value}>
+      {children}
+    </SocialContext.Provider>
+  );
+};
+
+export const useSocial = () => {
+  const context = useContext(SocialContext);
+  if (context === undefined) {
+    throw new Error('useSocial must be used within a SocialProvider');
+  }
+  return context;
+};
