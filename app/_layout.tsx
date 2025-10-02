@@ -6,17 +6,18 @@ import { Montserrat_400Regular, Montserrat_600SemiBold, Montserrat_700Bold } fro
 import { OpenSans_400Regular, OpenSans_600SemiBold } from '@expo-google-fonts/open-sans';
 import { PlayfairDisplay_400Regular_Italic } from '@expo-google-fonts/playfair-display';
 
-import { AuthProvider, useAuth } from '@/hooks/useAuth'; // Importar o AuthProvider
+import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { ErrorBoundary } from '@/utils/errorBoundary';
+import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 
-// Impedir que o ecrã de splash se esconda automaticamente
 SplashScreen.preventAutoHideAsync();
 
-// Componente de layout principal que agora contém a lógica de navegação
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  useFrameworkReady();
 
   const [fontsLoaded, fontError] = useFonts({
     'Montserrat-Regular': Montserrat_400Regular,
@@ -63,6 +64,7 @@ function RootLayoutNav() {
 
 // O componente exportado principal agora envolve tudo no AuthProvider
 export default function RootLayout() {
+  useFrameworkReady();
   return (
     <>
       <ErrorBoundary>
