@@ -113,6 +113,14 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
+  const refreshFeed = useCallback(async () => {
+    const session = await supabase.auth.getSession();
+    const userId = session?.data?.session?.user.id;
+    if (userId) {
+      await initializeSocial(userId);
+    }
+  }, [initializeSocial]);
+
   const createPost = useCallback(async (post: Omit<SocialPost, 'id' | 'createdAt' | 'likes' | 'comments' | 'shares' | 'prayerCount'>) => {
     setState(prev => ({ ...prev, error: null }));
     try {
@@ -141,7 +149,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setState(prev => ({ ...prev, error: error.message }));
       throw error;
     }
-  }, []);
+  }, [refreshFeed]);
 
   const likePost = useCallback(async (postId: string) => {
     try {
@@ -154,7 +162,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error: any) {
       console.error('Error liking post:', error);
     }
-  }, []);
+  }, [refreshFeed]);
 
   const commentOnPost = useCallback(async (postId: string, content: string) => {
     try {
@@ -167,7 +175,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error: any) {
       console.error('Error commenting on post:', error);
     }
-  }, []);
+  }, [refreshFeed]);
 
   const prayForPost = useCallback(async (postId: string) => {
     try {
@@ -178,7 +186,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error: any) {
       console.error('Error praying for post:', error);
     }
-  }, []);
+  }, [refreshFeed]);
 
   const sharePost = useCallback(async (postId: string) => {
     try {
@@ -189,7 +197,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error: any) {
       console.error('Error sharing post:', error);
     }
-  }, []);
+  }, [refreshFeed]);
 
   const joinGroup = useCallback(async (groupId: string) => {
     console.log('Joining group:', groupId);
@@ -233,14 +241,6 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const getUnreadNotificationsCount = useCallback(() => {
     return state.socialNotifications.filter(notif => !notif.read).length;
   }, [state.socialNotifications]);
-
-  const refreshFeed = useCallback(async () => {
-    const session = await supabase.auth.getSession();
-    const userId = session?.data?.session?.user.id;
-    if (userId) {
-      await initializeSocial(userId);
-    }
-  }, [initializeSocial]);
 
   const filterFeed = useCallback((filters: any) => {}, []);
 
