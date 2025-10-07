@@ -1,7 +1,7 @@
 import { Tabs, Redirect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import Colors from '@/constants/Colors';
-import { Heart, MessageSquare, Calendar, User, Search } from 'lucide-react-native';
+import { Heart, MessageSquare, Calendar, User, Search, Bug } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function TabLayout() {
