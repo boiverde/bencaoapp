@@ -104,17 +104,18 @@ export class SystemDiagnostics {
         const requiredBuckets = ['avatars', 'profile-photos', 'gallery-photos', 'chat-media'];
         const existingBuckets = data.map(b => b.name);
         const missingBuckets = requiredBuckets.filter(b => !existingBuckets.includes(b));
+        const foundBuckets = requiredBuckets.filter(b => existingBuckets.includes(b));
 
         const allBucketsExist = missingBuckets.length === 0;
         results.push({
           component: 'File Storage',
           status: allBucketsExist ? 'working' : 'partial',
           message: allBucketsExist
-            ? `Storage configurado (${existingBuckets.length} buckets)`
-            : `Buckets encontrados: ${existingBuckets.join(', ')}`,
+            ? `Storage configurado (${requiredBuckets.length}/${requiredBuckets.length} buckets)`
+            : `${foundBuckets.length}/${requiredBuckets.length} buckets configurados`,
           details: missingBuckets.length > 0
             ? `Faltando: ${missingBuckets.join(', ')}`
-            : undefined,
+            : `Buckets: ${foundBuckets.join(', ')}`,
           lastChecked: Date.now()
         });
       }
