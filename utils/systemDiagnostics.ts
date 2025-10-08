@@ -101,11 +101,20 @@ export class SystemDiagnostics {
           lastChecked: Date.now()
         });
       } else {
-        const hasAvatarsBucket = data.some(bucket => bucket.name === 'avatars');
+        const requiredBuckets = ['avatars', 'profile-photos', 'gallery-photos', 'chat-media'];
+        const existingBuckets = data.map(b => b.name);
+        const missingBuckets = requiredBuckets.filter(b => !existingBuckets.includes(b));
+
+        const allBucketsExist = missingBuckets.length === 0;
         results.push({
           component: 'File Storage',
-          status: hasAvatarsBucket ? 'working' : 'partial',
-          message: hasAvatarsBucket ? 'Storage configurado' : 'Buckets faltando',
+          status: allBucketsExist ? 'working' : 'partial',
+          message: allBucketsExist
+            ? `Storage configurado (${existingBuckets.length} buckets)`
+            : `Buckets encontrados: ${existingBuckets.join(', ')}`,
+          details: missingBuckets.length > 0
+            ? `Faltando: ${missingBuckets.join(', ')}`
+            : undefined,
           lastChecked: Date.now()
         });
       }
