@@ -91,39 +91,40 @@ export class SystemDiagnostics {
 
     // Test Storage
     try {
-      const { data, error } = await supabase.storage.listBuckets();
-      if (error) {
-        results.push({
-          component: 'File Storage',
-          status: 'broken',
-          message: 'Storage não configurado',
-          details: error.message,
-          lastChecked: Date.now()
-        });
-      } else {
-        const requiredBuckets = ['avatars', 'profile-photos', 'gallery-photos', 'chat-media'];
-        const existingBuckets = data.map(b => b.name);
-        const missingBuckets = requiredBuckets.filter(b => !existingBuckets.includes(b));
-        const foundBuckets = requiredBuckets.filter(b => existingBuckets.includes(b));
+      const requiredBuckets = ['avatars', 'profile-photos', 'gallery-photos', 'chat-media'];
+      const bucketTests = await Promise.all(
+        requiredBuckets.map(async (bucketName) => {
+          try {
+            const { data, error } = await supabase.storage
+              .from(bucketName)
+              .list('', { limit: 1 });
+            return { bucket: bucketName, exists: !error };
+          } catch {
+            return { bucket: bucketName, exists: false };
+          }
+        })
+      );
 
-        const allBucketsExist = missingBuckets.length === 0;
-        results.push({
-          component: 'File Storage',
-          status: allBucketsExist ? 'working' : 'partial',
-          message: allBucketsExist
-            ? `Storage configurado (${requiredBuckets.length}/${requiredBuckets.length} buckets)`
-            : `${foundBuckets.length}/${requiredBuckets.length} buckets configurados`,
-          details: missingBuckets.length > 0
-            ? `Faltando: ${missingBuckets.join(', ')}`
-            : `Buckets: ${foundBuckets.join(', ')}`,
-          lastChecked: Date.now()
-        });
-      }
+      const foundBuckets = bucketTests.filter(t => t.exists).map(t => t.bucket);
+      const missingBuckets = bucketTests.filter(t => !t.exists).map(t => t.bucket);
+      const allBucketsExist = missingBuckets.length === 0;
+
+      results.push({
+        component: 'File Storage',
+        status: allBucketsExist ? 'working' : 'partial',
+        message: allBucketsExist
+          ? `Storage configurado (${requiredBuckets.length}/${requiredBuckets.length} buckets)`
+          : `${foundBuckets.length}/${requiredBuckets.length} buckets acessíveis`,
+        details: missingBuckets.length > 0
+          ? `Sem acesso: ${missingBuckets.join(', ')}`
+          : `Buckets OK: ${foundBuckets.join(', ')}`,
+        lastChecked: Date.now()
+      });
     } catch (error: any) {
       results.push({
         component: 'File Storage',
         status: 'broken',
-        message: 'Erro no storage',
+        message: 'Erro ao verificar storage',
         details: error.message,
         lastChecked: Date.now()
       });
@@ -146,9 +147,10 @@ export class SystemDiagnostics {
 
   static async testCreateUser(): Promise<{ success: boolean; message: string }> {
     try {
-      const testEmail = `test_${Date.now()}@example.com`;
+      const timestamp = Date.now();
+      const testEmail = `test${timestamp}@bencao.app`;
       const testPassword = 'TestPassword123!';
-      
+
       const { data, error } = await supabase.auth.signUp({
         email: testEmail,
         password: testPassword,
