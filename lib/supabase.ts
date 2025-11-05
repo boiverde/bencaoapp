@@ -1,14 +1,31 @@
 
 import "react-native-url-polyfill/auto";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+let supabaseClient: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Supabase URL or Anon Key is missing. Make sure to set them in your .env file."
-  );
-}
+const initializeSupabase = () => {
+  if (supabaseClient) {
+    return supabaseClient;
+  }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn(
+      "Supabase URL or Anon Key is missing. Using placeholder values. " +
+      "Make sure to set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env file."
+    );
+    supabaseClient = createClient(
+      "https://placeholder.supabase.co",
+      "placeholder-key"
+    );
+  } else {
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  }
+
+  return supabaseClient;
+};
+
+export const supabase = initializeSupabase();
